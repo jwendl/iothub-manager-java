@@ -76,7 +76,7 @@ public final class DeviceTwinServiceModel {
 
     private static Boolean isSimulated(Map tags) {
         Set<String> keys = tags.keySet();
-        return keys.contains("IsSimulated") && tags.get("IsSimulated") == "Y";
+        return keys.contains("IsSimulated") && tags.get("IsSimulated").equals("Y");
     }
 
     public DeviceTwinDevice toDeviceTwinDevice() {
