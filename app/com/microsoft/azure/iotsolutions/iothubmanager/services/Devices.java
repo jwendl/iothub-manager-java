@@ -43,6 +43,29 @@ public final class Devices implements IDevices {
         this.iotHubHostName = ioTHubService.getIotHubHostName();
     }
 
+    public DeviceTwinName GetDeviceTwinNamesAsync() {
+        DeviceTwinName twinNames = new DeviceTwinName();
+        try {
+            DeviceServiceListModel model = this.queryAsync(null, null).toCompletableFuture().get();
+            twinNames = model.GetDeviceTwinNames();
+        } catch (ExternalDependencyException | ExecutionException | InterruptedException e) {
+            String message = String.format("Unable to convert DeviceServiceListModel to DeviceTwinName");
+            if (e instanceof ExternalDependencyException)
+            throw new CompletionException(
+                new ExternalDependencyException(message, e));
+            else if (e instanceof ExecutionException)
+                throw new CompletionException(
+                    new ExecutionException(message, e));
+            else if (e instanceof InterruptedException)
+                throw new CompletionException(
+                    new InterruptedException(message));
+            else
+                throw new CompletionException(
+                    new BaseException(message, e));
+        }
+        return twinNames;
+    }
+
     public CompletionStage<DeviceServiceModel> getAsync(final String id) throws ExternalDependencyException {
         try {
             return this.registry.getDeviceAsync(id)
@@ -162,7 +185,7 @@ public final class Devices implements IDevices {
     }
 
     public CompletionStage<DeviceServiceModel> createOrUpdateAsync(
-        final String id, final DeviceServiceModel device, OnDeviceChange cacheRunner)
+        final String id, final DeviceServiceModel device, OnDeviceChange cacheCallBack)
         throws InvalidInputException, ExternalDependencyException {
         if (device.getId() == null || device.getId().isEmpty()) {
             throw new InvalidInputException("Device id is empty");
@@ -196,7 +219,7 @@ public final class Devices implements IDevices {
                             model.setTags(new HashSet<String>(device.getTwin().getTags().keySet()));
                             model.setReported(new HashSet<String>(device.getTwin().getProperties().getReported().keySet()));
                             // Update the deviceGroupFilter cache, no need to wait
-                            cacheRunner.updateCache(model);
+                            cacheCallBack.updateCache(model);
                             return new DeviceServiceModel(azureDevice, device.getTwin(), this.iotHubHostName);
                         }
                     } catch (IOException | IotHubException e) {

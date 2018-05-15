@@ -34,21 +34,24 @@ public class Cache implements ICache {
     private static final String WHITELIST_TAG_PREFIX = "tags.";
     private static final String WHITELIST_REPORTED_PREFIX = "reported.";
     private static final long SERVICE_QUERY_INTERVAL_SECS = 10;
+    private static IDevices devices;
 
     @Inject
     public Cache(IStorageAdapterClient storageClient,
-                 IServicesConfig config) throws ExternalDependencyException {
+                 IServicesConfig config,
+                 IDevices devices) throws ExternalDependencyException {
         this.storageClient = storageClient;
         this.cacheTTL = config.getCacheTTL();
         this.rebuildTimeout = config.getCacheRebuildTimeout();
         this.cacheWhitelist = config.getCacheWhiteList();
+        this.devices = devices;
     }
 
     @Override
     public CompletionStage<CacheValue> getCacheAsync() {
         try {
             return storageClient.getAsync(CacheCollectionId, CacheKey).thenApplyAsync(m ->
-                    Json.fromJson(Json.parse(m.getData()), CacheValue.class)
+                Json.fromJson(Json.parse(m.getData()), CacheValue.class)
             );
         } catch (Exception ex) {
             log.info(String.format("%s:%s not found.", CacheCollectionId, CacheKey), ex);
@@ -79,7 +82,7 @@ public class Cache implements ICache {
             String value = Json.stringify(Json.toJson(cacheValuesToAdd));
             try {
                 return this.storageClient.updateAsync(CacheCollectionId, CacheKey, value, etag).thenApplyAsync(m ->
-                        Json.fromJson(Json.parse(m.getData()), CacheValue.class)
+                    Json.fromJson(Json.parse(m.getData()), CacheValue.class)
                 );
             } catch (ConflictingResourceException e) {
                 log.info("SetCacheAsync Conflicted ");
@@ -91,12 +94,12 @@ public class Cache implements ICache {
     @Override
     public CompletionStage rebuildCacheAsync(boolean force) throws Exception {
         StorageWriteLock<CacheValue> lock = new StorageWriteLock<>(
-                CacheValue.class,
-                this.storageClient,
-                CacheCollectionId,
-                CacheKey,
-                (c, b) -> c.setRebuilding(b),
-                m -> this.shouldRebuild(force, m));
+            CacheValue.class,
+            this.storageClient,
+            CacheCollectionId,
+            CacheKey,
+            (c, b) -> c.setRebuilding(b),
+            m -> this.shouldRebuild(force, m));
 
         while (true) {
             // Try to read non-empty twin data at first before locking cache entry
@@ -185,20 +188,13 @@ public class Cache implements ICache {
         DeviceTwinName validNames = new DeviceTwinName(fullNameWhitelist.getTags(), fullNameWhitelist.getReportedProperties());
 
         if (!prefixWhitelist.getTags().isEmpty() || !prefixWhitelist.getReportedProperties().isEmpty()) {
-            DeviceTwinName allNames = null;
-//            try {
-//                allNames = this.iotHubClient.getDeviceTwinNamesAsync().toCompletableFuture().get();
-//            } catch (InterruptedException | ExecutionException | URISyntaxException e) {
-//                String errorMessage = "failed to get deviceTwinNames";
-//                log.error(errorMessage, e);
-//                throw new ExternalDependencyException(errorMessage, e);
-//            }
+            DeviceTwinName allNames = devices.GetDeviceTwinNamesAsync();
 
             validNames.getTags().addAll(allNames.getTags().stream().
-                    filter(m -> prefixWhitelist.getTags().stream().anyMatch(m::startsWith)).collect(Collectors.toSet()));
+                filter(m -> prefixWhitelist.getTags().stream().anyMatch(m::startsWith)).collect(Collectors.toSet()));
 
             validNames.getReportedProperties().addAll(allNames.getReportedProperties().stream().
-                    filter(m -> prefixWhitelist.getReportedProperties().stream().anyMatch(m::startsWith)).collect(Collectors.toSet()));
+                filter(m -> prefixWhitelist.getReportedProperties().stream().anyMatch(m::startsWith)).collect(Collectors.toSet()));
         }
 
         return CompletableFuture.supplyAsync(() -> validNames);
@@ -207,18 +203,18 @@ public class Cache implements ICache {
     private void parseWhitelist(List<String> whitelist, DeviceTwinName fullNameWhitelist, DeviceTwinName prefixWhitelist) {
 
         List<String> tags = whitelist.stream().filter(m -> m.startsWith(WHITELIST_TAG_PREFIX)).
-                map(m -> m.substring(WHITELIST_TAG_PREFIX.length())).collect(Collectors.toList());
+            map(m -> m.substring(WHITELIST_TAG_PREFIX.length())).collect(Collectors.toList());
 
         List<String> reported = whitelist.stream().filter(m -> m.startsWith(WHITELIST_REPORTED_PREFIX)).
-                map(m -> m.substring(WHITELIST_REPORTED_PREFIX.length())).collect(Collectors.toList());
+            map(m -> m.substring(WHITELIST_REPORTED_PREFIX.length())).collect(Collectors.toList());
 
         List<String> fixedTags = tags.stream().filter(m -> !m.endsWith("*")).collect(Collectors.toList());
         List<String> fixedReported = reported.stream().filter(m -> !m.endsWith("*")).collect(Collectors.toList());
         List<String> regexTags = tags.stream().filter(m -> m.endsWith("*")).
-                map(m -> m.substring(0, m.length() - 1)).collect(Collectors.toList());
+            map(m -> m.substring(0, m.length() - 1)).collect(Collectors.toList());
 
         List<String> regexReported = reported.stream().filter(m -> m.endsWith("*")).
-                map(m -> m.substring(0, m.length() - 1)).collect(Collectors.toList());
+            map(m -> m.substring(0, m.length() - 1)).collect(Collectors.toList());
 
         fullNameWhitelist.setTags(new HashSet<>(fixedTags));
         fullNameWhitelist.setReportedProperties(new HashSet<>(fixedReported));
@@ -266,13 +262,9 @@ public class Cache implements ICache {
     }
 
     private DeviceTwinName getDevicePropertyNames() throws ExternalDependencyException, URISyntaxException, ExecutionException, InterruptedException {
-//        CompletableFuture<DeviceTwinName> twinNamesTask = this.getValidNamesAsync().toCompletableFuture();
-//        CompletableFuture<HashSet<String>> simulationNamesTask = this.simulationClient.getDevicePropertyNamesAsync().toCompletableFuture();
-//        CompletableFuture.allOf(twinNamesTask, simulationNamesTask).get();
-//        DeviceTwinName twinNames = twinNamesTask.get();
-//        twinNames.getReportedProperties().addAll(simulationNamesTask.get());
-//        return twinNames;
-        return null;
+        CompletableFuture<DeviceTwinName> twinNamesTask = this.getValidNamesAsync().toCompletableFuture();
+        DeviceTwinName twinNames = twinNamesTask.get();
+        return twinNames;
     }
 
     private Boolean writeAndUnlockCache(StorageWriteLock<CacheValue> lock, DeviceTwinName twinNames) throws ExternalDependencyException, ResourceOutOfDateException {

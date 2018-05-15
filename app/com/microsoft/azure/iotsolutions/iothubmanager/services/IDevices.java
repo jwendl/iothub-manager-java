@@ -15,6 +15,8 @@ public interface IDevices {
 
     CompletionStage<DeviceServiceListModel> queryAsync(String query, String continuationToken) throws ExternalDependencyException;
 
+    DeviceTwinName GetDeviceTwinNamesAsync();
+
     CompletionStage<DeviceServiceModel> getAsync(String id) throws ExternalDependencyException;
 
     CompletionStage<DeviceServiceModel> createAsync(DeviceServiceModel device) throws InvalidInputException, ExternalDependencyException;

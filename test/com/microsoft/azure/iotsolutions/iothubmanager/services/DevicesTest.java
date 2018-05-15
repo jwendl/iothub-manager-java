@@ -37,6 +37,7 @@ public class DevicesTest {
     private static ArrayList<DeviceClient> testDeviceEmulators = new ArrayList<>();
     private static String batchId = UUID.randomUUID().toString().replace("-", "");
     private static final String MALFORMED_JSON_EXCEED_5_LEVELS = "Malformed Json: exceed 5 levels";
+    private static OnDeviceChange cacheUpdateCallBack;
 
     private static boolean setUpIsDone = false;
 
@@ -60,6 +61,9 @@ public class DevicesTest {
         deviceService = new Devices(ioTHubWrapper, storageAdapterClient);
 
         createTestDevices(2, batchId);
+        cacheUpdateCallBack = devices -> {
+            //mock callback - does nothing
+        };
 
         setUpIsDone = true;
     }
@@ -266,7 +270,7 @@ public class DevicesTest {
         DeviceTwinProperties properties = new DeviceTwinProperties(desired, null);
         DeviceTwinServiceModel twin = new DeviceTwinServiceModel(eTag, deviceId, properties, tags, true);
         DeviceServiceModel device = new DeviceServiceModel(eTag, deviceId, 0, null, false, true, null, twin, null, null);
-        DeviceServiceModel newDevice = deviceService.createOrUpdateAsync(device.getId(), device).toCompletableFuture().get();
+        DeviceServiceModel newDevice = deviceService.createOrUpdateAsync(device.getId(), device, cacheUpdateCallBack).toCompletableFuture().get();
         DeviceTwinServiceModel newTwin = newDevice.getTwin();
         HashMap<String, Object> configMap = (HashMap) newTwin.getProperties().getDesired().get("Config");
         Assert.assertEquals(deviceId, newDevice.getId());
@@ -282,7 +286,7 @@ public class DevicesTest {
         String eTag = "etagxx==";
         DeviceTwinServiceModel twin = new DeviceTwinServiceModel(eTag, "MismatchedDeviceID", null, null, true);
         DeviceServiceModel device = new DeviceServiceModel(eTag, "MismatchedDeviceID", 0, null, false, true, null, twin, null, null);
-        deviceService.createOrUpdateAsync(deviceId, device).toCompletableFuture().get();
+        deviceService.createOrUpdateAsync(deviceId, device, cacheUpdateCallBack).toCompletableFuture().get();
     }
 
     @Test(timeout = 100000, expected = InvalidInputException.class)
@@ -292,7 +296,7 @@ public class DevicesTest {
         String eTag = "etagxx==";
         DeviceTwinServiceModel twin = new DeviceTwinServiceModel(eTag, "", null, null, true);
         DeviceServiceModel device = new DeviceServiceModel(eTag, "", 0, null, false, true, null, twin, null, null);
-        deviceService.createOrUpdateAsync(deviceId, device).toCompletableFuture().get();
+        deviceService.createOrUpdateAsync(deviceId, device, cacheUpdateCallBack).toCompletableFuture().get();
     }
 
     @Test(timeout = 10000)

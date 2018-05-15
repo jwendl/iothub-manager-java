@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.models.CacheValue;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.models.*;
 import play.libs.Json;
 import play.mvc.*;
@@ -71,15 +70,20 @@ public final class DevicesController extends Controller {
         final DeviceRegistryApiModel device = fromJson(json, DeviceRegistryApiModel.class);
         ICache cacheService = this.cacheService;
 
-        OnDeviceChange cacheUpdateCallBack = new OnDeviceChange() {
-            @Override
-            public void updateCache(CacheValue devices) {
-                try {
-                    cacheService.setCacheAsync(devices);
-                } catch (BaseException | ExecutionException | InterruptedException ex) {
-                    String message = String.format("Unable to update cache twin of device: %s", device.getId());
-                    throw new CompletionException(message, ex);
-                }
+        OnDeviceChange cacheUpdateCallBack = devices -> {
+            try {
+                cacheService.setCacheAsync(devices);
+            } catch (BaseException | ExecutionException | InterruptedException e) {
+                String message = String.format("Unable to update cache twin of device: %s", device.getId());
+                if (e instanceof ExecutionException)
+                    throw new CompletionException(
+                        new ExecutionException(message, e));
+                else if (e instanceof InterruptedException)
+                    throw new CompletionException(
+                        new InterruptedException(message));
+                else
+                    throw new CompletionException(
+                        new BaseException(message, e));
             }
         };
         return deviceService.createOrUpdateAsync(id, device.toServiceModel(), cacheUpdateCallBack)
