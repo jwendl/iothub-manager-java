@@ -72,9 +72,9 @@ public final class DevicesController extends Controller {
 
         OnDeviceChange cacheUpdateCallBack = devices -> {
             try {
-                cacheService.setCacheAsync(devices);
+                return cacheService.setCacheAsync(devices);
             } catch (BaseException | ExecutionException | InterruptedException e) {
-                String message = String.format("Unable to update cache twin of device: %s", device.getId());
+                String message = String.format("Unable to update cache");
                 if (e instanceof ExecutionException)
                     throw new CompletionException(
                         new ExecutionException(message, e));

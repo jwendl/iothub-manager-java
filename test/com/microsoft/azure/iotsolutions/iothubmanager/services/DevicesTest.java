@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class DevicesTest {
 
@@ -63,6 +64,7 @@ public class DevicesTest {
         createTestDevices(2, batchId);
         cacheUpdateCallBack = devices -> {
             //mock callback - does nothing
+            return new CompletableFuture();
         };
 
         setUpIsDone = true;
@@ -267,7 +269,16 @@ public class DevicesTest {
                 });
             }
         };
-        DeviceTwinProperties properties = new DeviceTwinProperties(desired, null);
+        HashMap reported = new HashMap() {
+            {
+                put("Config", new HashMap<String, Object>() {
+                    {
+                        put("Test", 2);
+                    }
+                });
+            }
+        };
+        DeviceTwinProperties properties = new DeviceTwinProperties(desired, reported);
         DeviceTwinServiceModel twin = new DeviceTwinServiceModel(eTag, deviceId, properties, tags, true);
         DeviceServiceModel device = new DeviceServiceModel(eTag, deviceId, 0, null, false, true, null, twin, null, null);
         DeviceServiceModel newDevice = deviceService.createOrUpdateAsync(device.getId(), device, cacheUpdateCallBack).toCompletableFuture().get();

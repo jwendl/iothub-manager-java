@@ -51,8 +51,8 @@ public final class Devices implements IDevices {
         } catch (ExternalDependencyException | ExecutionException | InterruptedException e) {
             String message = String.format("Unable to convert DeviceServiceListModel to DeviceTwinName");
             if (e instanceof ExternalDependencyException)
-            throw new CompletionException(
-                new ExternalDependencyException(message, e));
+                throw new CompletionException(
+                    new ExternalDependencyException(message, e));
             else if (e instanceof ExecutionException)
                 throw new CompletionException(
                     new ExecutionException(message, e));
@@ -218,8 +218,8 @@ public final class Devices implements IDevices {
                             CacheValue model = new CacheValue();
                             model.setTags(new HashSet<String>(device.getTwin().getTags().keySet()));
                             model.setReported(new HashSet<String>(device.getTwin().getProperties().getReported().keySet()));
-                            // Update the deviceGroupFilter cache, no need to wait
-                            cacheCallBack.updateCache(model);
+                            // Update the deviceProperties cache, no need to wait
+                            CompletionStage unused = cacheCallBack.updateCache(model);
                             return new DeviceServiceModel(azureDevice, device.getTwin(), this.iotHubHostName);
                         }
                     } catch (IOException | IotHubException e) {

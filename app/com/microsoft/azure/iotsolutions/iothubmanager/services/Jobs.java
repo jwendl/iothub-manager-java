@@ -3,8 +3,7 @@
 package com.microsoft.azure.iotsolutions.iothubmanager.services;
 
 import com.google.inject.Inject;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.ExternalDependencyException;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.InvalidInputException;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IStorageAdapterClient;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.*;
 import com.microsoft.azure.sdk.iot.service.devicetwin.Query;
@@ -16,8 +15,7 @@ import play.libs.Json;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 
 public class Jobs implements IJobs {
 
@@ -129,11 +127,15 @@ public class Jobs implements IJobs {
         String queryCondition,
         DeviceTwinServiceModel twin,
         Date startTime,
-        long maxExecutionTimeInSeconds)
+        long maxExecutionTimeInSeconds,
+        OnDeviceChange cacheCallBack)
         throws ExternalDependencyException {
         try {
-            // Update the deviceGroupFilter cache, no need to wait
-            //this.configService.updateDeviceGroupFiltersAsync(twin);
+            CacheValue model = new CacheValue();
+            model.setTags(new HashSet<String>(twin.getTags().keySet()));
+            model.setReported(new HashSet<String>(twin.getProperties().getReported().keySet()));
+            // Update the deviceProperties cache, no need to wait
+            CompletionStage unused = cacheCallBack.updateCache(model);
 
             JobResult result = this.jobClient.scheduleUpdateTwin(
                 jobId,

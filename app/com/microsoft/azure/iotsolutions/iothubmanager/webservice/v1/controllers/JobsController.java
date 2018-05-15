@@ -4,7 +4,7 @@ package com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.controllers
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.IJobs;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.helpers.DateHelper;
@@ -17,7 +17,7 @@ import play.mvc.Result;
 
 import javax.transaction.NotSupportedException;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 
 import static play.libs.Json.fromJson;
 import static play.libs.Json.toJson;
@@ -25,12 +25,14 @@ import static play.libs.Json.toJson;
 public final class JobsController extends Controller {
 
     private static final Logger.ALogger log = Logger.of(JobsController.class);
+    private final ICache cacheService;
 
     private final IJobs jobService;
 
     @Inject
-    public JobsController(final IJobs jobService) {
+    public JobsController(final IJobs jobService, final ICache cacheService) {
         this.jobService = jobService;
+        this.cacheService = cacheService;
     }
 
     public CompletionStage<Result> getJobsAsync()
@@ -94,6 +96,22 @@ public final class JobsController extends Controller {
         JsonNode json = request().body().asJson();
         final JobApiModel jobApiModel = fromJson(json, JobApiModel.class);
 
+        OnDeviceChange cacheUpdateCallBack = devices -> {
+            try {
+                return cacheService.setCacheAsync(devices);
+            } catch (BaseException | ExecutionException | InterruptedException e) {
+                String message = String.format("Unable to update cache");
+                if (e instanceof ExecutionException)
+                    throw new CompletionException(
+                        new ExecutionException(message, e));
+                else if (e instanceof InterruptedException)
+                    throw new CompletionException(
+                        new InterruptedException(message));
+                else
+                    throw new CompletionException(
+                        new BaseException(message, e));
+            }
+        };
         if (jobApiModel.getUpdateTwin() != null) {
             return jobService.scheduleTwinUpdateAsync(
                 jobApiModel.getJobId(),
@@ -102,7 +120,8 @@ public final class JobsController extends Controller {
                 jobApiModel.getStartTimeUtc() == null ?
                     DateTime.now(DateTimeZone.UTC).toDate() : jobApiModel.getStartTimeUtc(),
                 jobApiModel.getMaxExecutionTimeInSeconds() == null ?
-                    3600 : jobApiModel.getMaxExecutionTimeInSeconds())
+                    3600 : jobApiModel.getMaxExecutionTimeInSeconds(),
+                cacheUpdateCallBack)
                 .thenApply(job -> ok(toJson(new JobApiModel(job))));
         }
 

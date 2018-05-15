@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class JobsTest {
 
@@ -31,6 +32,7 @@ public class JobsTest {
     private static ArrayList<DeviceServiceModel> testDevices = new ArrayList<>();
     private static String batchId = UUID.randomUUID().toString().replace("-", "");
     public static final int MAX_RETRIES = 10;
+    private static OnDeviceChange cacheUpdateCallBack;
 
     private static boolean setUpIsDone = false;
 
@@ -55,6 +57,10 @@ public class JobsTest {
         jobService = new Jobs(ioTHubWrapper, storageAdapterClient);
 
         createTestDevices(2, batchId);
+        cacheUpdateCallBack = devices -> {
+            //mock callback - does nothing
+            return new CompletableFuture();
+        };
 
         setUpIsDone = true;
     }
@@ -109,14 +115,33 @@ public class JobsTest {
             put("Building", "Building40");
             put("Floor", "1F");
         }};
-        DeviceTwinServiceModel twin = new DeviceTwinServiceModel("*", "", null, tags, true);
+        HashMap desired = new HashMap() {
+            {
+                put("Config", new HashMap<String, Object>() {
+                    {
+                        put("Test", 1);
+                    }
+                });
+            }
+        };
+        HashMap reported = new HashMap() {
+            {
+                put("Config", new HashMap<String, Object>() {
+                    {
+                        put("Test", 2);
+                    }
+                });
+            }
+        };
+        DeviceTwinProperties properties = new DeviceTwinProperties(desired, reported);
+        DeviceTwinServiceModel twin = new DeviceTwinServiceModel("*", "", properties, tags, true);
 
         IJobs twinJobService = new Jobs(ioTHubWrapper, storageAdapterClient);
         // retry scheduling job with back off time when throttled by IotHub
         for (int i = 1; i <= MAX_RETRIES; i++) {
             try {
                 String newJobId = jobIdPrefix + i;
-                twinJobService.scheduleTwinUpdateAsync(newJobId, condition, twin, new Date(), 120).toCompletableFuture().get();
+                twinJobService.scheduleTwinUpdateAsync(newJobId, condition, twin, new Date(), 120, cacheUpdateCallBack).toCompletableFuture().get();
                 JobServiceModel newJob = twinJobService.getJobAsync(newJobId, false, null).toCompletableFuture().get();
                 Assert.assertEquals(newJobId, newJob.getJobId());
                 Assert.assertEquals(JobType.scheduleUpdateTwin, newJob.getJobType());

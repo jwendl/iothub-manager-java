@@ -33,7 +33,7 @@ public class DeviceServiceListModel {
         HashSet<String> tagSet = new HashSet<>();
         StreamSupport.stream(items.spliterator(), false).forEach(m -> {
             m.getTwin().getTags().entrySet().stream().forEach(n -> {
-                HashSetHelper.preparePropNames(tagSet, n.toString(), n.toString());
+                HashSetHelper.preparePropNames(tagSet, n.getValue(), n.getKey());
             });
         });
         HashSet<String> reportedSet = new HashSet<>();
