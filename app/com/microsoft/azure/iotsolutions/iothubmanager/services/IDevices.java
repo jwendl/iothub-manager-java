@@ -19,7 +19,7 @@ public interface IDevices {
 
     CompletionStage<DeviceServiceModel> createAsync(DeviceServiceModel device) throws InvalidInputException, ExternalDependencyException;
 
-    CompletionStage<DeviceServiceModel> createOrUpdateAsync(String id, DeviceServiceModel device) throws InvalidInputException, ExternalDependencyException;
+    CompletionStage<DeviceServiceModel> createOrUpdateAsync(String id, DeviceServiceModel device, OnDeviceChange cacheRunner) throws InvalidInputException, ExternalDependencyException;
 
     CompletionStage<Boolean> deleteAsync(String id) throws ExternalDependencyException;
 

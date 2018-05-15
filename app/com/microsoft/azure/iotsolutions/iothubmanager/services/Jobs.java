@@ -3,8 +3,9 @@
 package com.microsoft.azure.iotsolutions.iothubmanager.services;
 
 import com.google.inject.Inject;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IConfigService;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.ExternalDependencyException;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.InvalidInputException;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IStorageAdapterClient;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.*;
 import com.microsoft.azure.sdk.iot.service.devicetwin.Query;
 import com.microsoft.azure.sdk.iot.service.exceptions.IotHubException;
@@ -23,16 +24,16 @@ public class Jobs implements IJobs {
     private static final Logger.ALogger log = Logger.of(Jobs.class);
 
     private IIoTHubWrapper ioTHubService;
-    private final IConfigService configService;
+    private final IStorageAdapterClient storageAdapterClient;
     private final JobClient jobClient;
 
     private final String DEVICE_DETAILS_QUERY_FORMAT = "select * from devices.jobs where devices.jobs.jobId = '%s'";
     private final String DEVICE_DETAILS_QUERYWITH_STATUS_FORMAT = "select * from devices.jobs where devices.jobs.jobId = '%s' and devices.jobs.status = '%s'";
 
     @Inject
-    public Jobs(final IIoTHubWrapper ioTHubService, final IConfigService configService) throws Exception {
+    public Jobs(final IIoTHubWrapper ioTHubService, final IStorageAdapterClient storageAdapterClient) throws Exception {
         this.ioTHubService = ioTHubService;
-        this.configService = configService;
+        this.storageAdapterClient = storageAdapterClient;
         this.jobClient = ioTHubService.getJobClient();
     }
 
@@ -132,7 +133,7 @@ public class Jobs implements IJobs {
         throws ExternalDependencyException {
         try {
             // Update the deviceGroupFilter cache, no need to wait
-            this.configService.updateDeviceGroupFiltersAsync(twin);
+            //this.configService.updateDeviceGroupFiltersAsync(twin);
 
             JobResult result = this.jobClient.scheduleUpdateTwin(
                 jobId,

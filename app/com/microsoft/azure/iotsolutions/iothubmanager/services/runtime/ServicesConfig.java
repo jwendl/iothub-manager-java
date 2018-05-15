@@ -2,17 +2,25 @@
 
 package com.microsoft.azure.iotsolutions.iothubmanager.services.runtime;
 
+import java.util.List;
+
 /**
  * Service layer configuration
  */
 public class ServicesConfig implements IServicesConfig {
 
     private String hubConnString;
-    private String configServiceUrl;
+    private String storageAdapterApiUrl;
+    private int cacheTTL;
+    private int cacheRebuildTimeout;
+    private List<String> cacheWhiteList;
 
-    public ServicesConfig(final String hubConnString, final String configServiceUrl) {
+    public ServicesConfig(final String hubConnString, final String storageAdapterApiUrl, int cacheTTL, int cacheRebuildTimeout, List<String> cacheWhiteList) {
         this.hubConnString = hubConnString;
-        this.configServiceUrl = configServiceUrl;
+        this.storageAdapterApiUrl = storageAdapterApiUrl;
+        this.cacheWhiteList = cacheWhiteList;
+        this.cacheTTL = cacheTTL;
+        this.cacheRebuildTimeout = cacheRebuildTimeout;
     }
 
     /**
@@ -25,11 +33,27 @@ public class ServicesConfig implements IServicesConfig {
     }
 
     /**
-     * Get Config service URL.
+     * Get Storage Adapter service URL.
      *
-     * @return Config service URL
+     * @return Storage Adapter service URL
      */
-    public String getConfigServiceUrl() {
-        return this.configServiceUrl;
+    @Override
+    public String getStorageAdapterApiUrl() {
+        return storageAdapterApiUrl;
+    }
+
+    @Override
+    public int getCacheTTL() {
+        return cacheTTL;
+    }
+
+    @Override
+    public int getCacheRebuildTimeout() {
+        return cacheRebuildTimeout;
+    }
+
+    @Override
+    public List<String> getCacheWhiteList() {
+        return cacheWhiteList;
     }
 }

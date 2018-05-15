@@ -4,13 +4,14 @@ package com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.controllers
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.IDevices;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.models.CacheValue;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.models.*;
 import play.libs.Json;
 import play.mvc.*;
 
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 
 import static play.libs.Json.fromJson;
 import static play.libs.Json.toJson;
@@ -18,12 +19,13 @@ import static play.libs.Json.toJson;
 public final class DevicesController extends Controller {
 
     private final IDevices deviceService;
-
+    private final ICache cacheService;
     final String ContinuationTokenName = "x-ms-continuation";
 
     @Inject
-    public DevicesController(final IDevices deviceService) {
+    public DevicesController(final IDevices deviceService, final ICache cacheService) {
         this.deviceService = deviceService;
+        this.cacheService = cacheService;
     }
 
     public CompletionStage<Result> getDevicesAsync(String query) throws ExternalDependencyException {
@@ -67,7 +69,20 @@ public final class DevicesController extends Controller {
     public CompletionStage<Result> putAsync(final String id) throws InvalidInputException, ExternalDependencyException {
         JsonNode json = request().body().asJson();
         final DeviceRegistryApiModel device = fromJson(json, DeviceRegistryApiModel.class);
-        return deviceService.createOrUpdateAsync(id, device.toServiceModel())
+        ICache cacheService = this.cacheService;
+
+        OnDeviceChange cacheUpdateCallBack = new OnDeviceChange() {
+            @Override
+            public void updateCache(CacheValue devices) {
+                try {
+                    cacheService.setCacheAsync(devices);
+                } catch (BaseException | ExecutionException | InterruptedException ex) {
+                    String message = String.format("Unable to update cache twin of device: %s", device.getId());
+                    throw new CompletionException(message, ex);
+                }
+            }
+        };
+        return deviceService.createOrUpdateAsync(id, device.toServiceModel(), cacheUpdateCallBack)
             .thenApply(newDevice -> ok(toJson(new DeviceRegistryApiModel(newDevice))));
     }
 

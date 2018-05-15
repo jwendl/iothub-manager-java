@@ -4,19 +4,20 @@ package com.microsoft.azure.iotsolutions.iothubmanager.services;
 
 import com.google.inject.Inject;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IConfigService;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IStorageAdapterClient;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.helpers.QueryConditionTranslator;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.*;
-import com.microsoft.azure.sdk.iot.service.*;
+import com.microsoft.azure.sdk.iot.service.Device;
+import com.microsoft.azure.sdk.iot.service.RegistryManager;
 import com.microsoft.azure.sdk.iot.service.devicetwin.*;
-import com.microsoft.azure.sdk.iot.service.exceptions.*;
+import com.microsoft.azure.sdk.iot.service.exceptions.IotHubException;
+import com.microsoft.azure.sdk.iot.service.exceptions.IotHubNotFoundException;
+import play.Logger;
+import play.libs.Json;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-
-import play.Logger;
-import play.libs.Json;
 
 public final class Devices implements IDevices {
 
@@ -30,12 +31,12 @@ public final class Devices implements IDevices {
     private final DeviceMethod deviceMethodClient;
     private final String iotHubHostName;
     IIoTHubWrapper _ioTHubService;
-    private final IConfigService configService;
+    private final IStorageAdapterClient storageAdapterClient;
 
     @Inject
-    public Devices(final IIoTHubWrapper ioTHubService, final IConfigService configService) throws Exception {
+    public Devices(final IIoTHubWrapper ioTHubService, final IStorageAdapterClient storageAdapterClient) throws Exception {
         _ioTHubService = ioTHubService;
-        this.configService = configService;
+        this.storageAdapterClient = storageAdapterClient;
         this.registry = ioTHubService.getRegistryManagerClient();
         this.deviceTwinClient = ioTHubService.getDeviceTwinClient();
         this.deviceMethodClient = ioTHubService.getDeviceMethodClient();
@@ -161,7 +162,7 @@ public final class Devices implements IDevices {
     }
 
     public CompletionStage<DeviceServiceModel> createOrUpdateAsync(
-        final String id, final DeviceServiceModel device)
+        final String id, final DeviceServiceModel device, OnDeviceChange cacheRunner)
         throws InvalidInputException, ExternalDependencyException {
         if (device.getId() == null || device.getId().isEmpty()) {
             throw new InvalidInputException("Device id is empty");
@@ -191,8 +192,11 @@ public final class Devices implements IDevices {
                             return new DeviceServiceModel(azureDevice, new DeviceTwinServiceModel(twin), this.iotHubHostName);
                         } else {
                             this.deviceTwinClient.updateTwin(device.getTwin().toDeviceTwinDevice());
+                            CacheValue model = new CacheValue();
+                            model.setTags(new HashSet<String>(device.getTwin().getTags().keySet()));
+                            model.setReported(new HashSet<String>(device.getTwin().getProperties().getReported().keySet()));
                             // Update the deviceGroupFilter cache, no need to wait
-                            this.configService.updateDeviceGroupFiltersAsync(device.getTwin());
+                            cacheRunner.updateCache(model);
                             return new DeviceServiceModel(azureDevice, device.getTwin(), this.iotHubHostName);
                         }
                     } catch (IOException | IotHubException e) {

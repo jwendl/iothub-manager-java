@@ -3,18 +3,21 @@
 package com.microsoft.azure.iotsolutions.iothubmanager.services;
 
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.external.ConfigService;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IConfigService;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IStorageAdapterClient;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.external.StorageAdapterClient;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.http.IHttpClient;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.runtime.IServicesConfig;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.runtime.ServicesConfig;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.runtime.Config;
-import com.microsoft.azure.sdk.iot.device.*;
+import com.microsoft.azure.sdk.iot.device.DeviceClient;
+import com.microsoft.azure.sdk.iot.device.IotHubClientProtocol;
 import com.microsoft.azure.sdk.iot.service.auth.SymmetricKey;
-import helpers.IntegrationTest;
 import helpers.DeviceMethodEmulator;
+import helpers.IntegrationTest;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
-import play.test.WSTestClient;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -25,7 +28,9 @@ public class DevicesTest {
 
     private static Config config;
     private static IServicesConfig servicesConfig;
-    private static IConfigService configService;
+    private static IStorageAdapterClient storageAdapterClient;
+    private static IHttpClient mockHttpClient;
+    private static String MockServiceUri = "http://mockstorageadapter";
     private static IIoTHubWrapper ioTHubWrapper;
     private static IDevices deviceService;
     private static ArrayList<DeviceServiceModel> testDevices = new ArrayList<>();
@@ -35,6 +40,11 @@ public class DevicesTest {
 
     private static boolean setUpIsDone = false;
 
+    @Before
+    public void setUp() {
+        mockHttpClient = Mockito.mock(IHttpClient.class);
+    }
+
     @BeforeClass
     public static void setUpOnce() throws Exception {
         if (setUpIsDone) {
@@ -43,9 +53,11 @@ public class DevicesTest {
 
         config = new Config();
         servicesConfig = config.getServicesConfig();
-        configService = new ConfigService(servicesConfig, WSTestClient.newClient(9005));
+        storageAdapterClient = new StorageAdapterClient(
+            mockHttpClient,
+            new ServicesConfig(null, MockServiceUri, 0, 0, null));
         ioTHubWrapper = new IoTHubWrapper(servicesConfig);
-        deviceService = new Devices(ioTHubWrapper, configService);
+        deviceService = new Devices(ioTHubWrapper, storageAdapterClient);
 
         createTestDevices(2, batchId);
 
