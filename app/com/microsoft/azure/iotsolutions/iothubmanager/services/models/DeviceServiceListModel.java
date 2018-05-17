@@ -28,7 +28,7 @@ public class DeviceServiceListModel {
         return this.continuationToken;
     }
 
-    public DeviceTwinName GetDeviceTwinNames() {
+    public DeviceTwinName toDeviceTwinNames() {
         HashSet<String> tagSet = new HashSet<>();
         StreamSupport.stream(items.spliterator(), false).forEach(m -> {
             HashSet<String> currentTagSet = HashMapHelper.mapToHashSet("", m.getTwin().getTags());

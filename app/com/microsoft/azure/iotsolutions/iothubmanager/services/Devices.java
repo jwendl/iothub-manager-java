@@ -48,7 +48,7 @@ public final class Devices implements IDevices {
         try {
             CompletableFuture<DeviceServiceListModel> twinNamesTask = this.queryAsync("", "").toCompletableFuture();
             DeviceServiceListModel model = twinNamesTask.get();
-            twinNames = model.GetDeviceTwinNames();
+            twinNames = model.toDeviceTwinNames();
         } catch (ExternalDependencyException | ExecutionException | InterruptedException e) {
             String message = String.format("Unable to convert DeviceServiceListModel to DeviceTwinName");
             if (e instanceof ExternalDependencyException)
