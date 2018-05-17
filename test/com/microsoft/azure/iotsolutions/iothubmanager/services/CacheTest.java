@@ -75,7 +75,7 @@ public class CacheTest {
     @Test(timeout = 300000)
     @Category({UnitTest.class})
     public void rebuildCacheAsyncSuccessTestAsync() throws Exception {
-        Mockito.when(mockDevices.GetDeviceTwinNamesAsync())
+        Mockito.when(mockDevices.GetDeviceTwinNames())
             .thenReturn(new DeviceTwinName(new HashSet<>(), new HashSet<>()))
             .thenReturn(new DeviceTwinName(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>()));
 
@@ -97,7 +97,7 @@ public class CacheTest {
     @Test(timeout = 100000)
     @Category({UnitTest.class})
     public void rebuildCacheAsyncFailureTestAsync() throws Exception {
-        Mockito.when(mockDevices.GetDeviceTwinNamesAsync())
+        Mockito.when(mockDevices.GetDeviceTwinNames())
             .thenReturn(new DeviceTwinName(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>()));
         String rebuildingCacheModel = "{\"Rebuilding\": true,\"Tags\": null,\"Reported\": null }";
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
