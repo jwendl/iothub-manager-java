@@ -43,10 +43,11 @@ public final class Devices implements IDevices {
         this.iotHubHostName = ioTHubService.getIotHubHostName();
     }
 
-    public DeviceTwinName GetDeviceTwinNamesAsync() {
+    public DeviceTwinName GetDeviceTwinNames() {
         DeviceTwinName twinNames = new DeviceTwinName();
         try {
-            DeviceServiceListModel model = this.queryAsync(null, null).toCompletableFuture().get();
+            CompletableFuture<DeviceServiceListModel> twinNamesTask = this.queryAsync("", "").toCompletableFuture();
+            DeviceServiceListModel model = twinNamesTask.get();
             twinNames = model.GetDeviceTwinNames();
         } catch (ExternalDependencyException | ExecutionException | InterruptedException e) {
             String message = String.format("Unable to convert DeviceServiceListModel to DeviceTwinName");

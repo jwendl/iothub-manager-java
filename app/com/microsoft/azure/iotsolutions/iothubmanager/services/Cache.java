@@ -188,8 +188,7 @@ public class Cache implements ICache {
         DeviceTwinName validNames = new DeviceTwinName(fullNameWhitelist.getTags(), fullNameWhitelist.getReportedProperties());
 
         if (!prefixWhitelist.getTags().isEmpty() || !prefixWhitelist.getReportedProperties().isEmpty()) {
-            DeviceTwinName allNames = devices.GetDeviceTwinNamesAsync();
-
+            DeviceTwinName allNames = devices.GetDeviceTwinNames();
             validNames.getTags().addAll(allNames.getTags().stream().
                 filter(m -> prefixWhitelist.getTags().stream().anyMatch(m::startsWith)).collect(Collectors.toSet()));
 
@@ -202,10 +201,10 @@ public class Cache implements ICache {
 
     private void parseWhitelist(List<String> whitelist, DeviceTwinName fullNameWhitelist, DeviceTwinName prefixWhitelist) {
 
-        List<String> tags = whitelist.stream().filter(m -> m.startsWith(WHITELIST_TAG_PREFIX)).
+        List<String> tags = whitelist.stream().filter(m -> m.toLowerCase().startsWith(WHITELIST_TAG_PREFIX)).
             map(m -> m.substring(WHITELIST_TAG_PREFIX.length())).collect(Collectors.toList());
 
-        List<String> reported = whitelist.stream().filter(m -> m.startsWith(WHITELIST_REPORTED_PREFIX)).
+        List<String> reported = whitelist.stream().filter(m -> m.toLowerCase().startsWith(WHITELIST_REPORTED_PREFIX)).
             map(m -> m.substring(WHITELIST_REPORTED_PREFIX.length())).collect(Collectors.toList());
 
         List<String> fixedTags = tags.stream().filter(m -> !m.endsWith("*")).collect(Collectors.toList());
