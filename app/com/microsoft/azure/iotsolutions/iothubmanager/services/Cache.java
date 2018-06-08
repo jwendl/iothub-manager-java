@@ -233,11 +233,11 @@ public class Cache implements ICache {
         return null;
     }
 
-    private void updateCacheValues(ValueApiModel CacheFromStorage, CacheValue cacheValuesToAdd) {
-        if (CacheFromStorage != null) {
+    private void updateCacheValues(ValueApiModel cacheFromStorage, CacheValue cacheValuesToAdd) {
+        if (cacheFromStorage != null) {
             CacheValue cacheServer;
             try {
-                cacheServer = Json.fromJson(Json.parse(CacheFromStorage.getData()), CacheValue.class);
+                cacheServer = Json.fromJson(Json.parse(cacheFromStorage.getData()), CacheValue.class);
             } catch (Exception e) {
                 cacheServer = new CacheValue();
             }

@@ -20,7 +20,7 @@ services:
       - PCS_IOTHUB_CONNSTRING
       - PCS_STORAGEADAPTER_WEBSERVICE_URL
   storageadapter:
-    image: azureiotpcs/pcs-storage-adapter-dotnet:testing
+    image: azureiotpcs/pcs-storage-adapter-java:testing
     ports:
       - "9022:9022"
     environment:

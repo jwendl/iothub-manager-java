@@ -27,8 +27,7 @@ public class RecurringTasks implements IRecurringTasks {
     private static final Logger.ALogger log = Logger.of(RecurringTasks.class);
 
     @Inject
-    public RecurringTasks(
-            ICache cache) {
+    public RecurringTasks(ICache cache) {
         this.cache = cache;
         CompletableFuture.runAsync(() -> this.run());
     }
@@ -81,7 +80,7 @@ public class RecurringTasks implements IRecurringTasks {
             this.cache.rebuildCacheAsync().toCompletableFuture().get(CACHE_TIMEOUT_SECS * 1000, TimeUnit.SECONDS);
             this.log.info("Cache updated");
         } catch (Exception e) {
-            this.log.warn("Cache update failed, will retry later");
+            this.log.warn("Cache update failed, will retry later", e);
         }
         this.scheduleCacheUpdate();
     }

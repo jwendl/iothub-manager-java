@@ -96,21 +96,8 @@ public final class JobsController extends Controller {
         JsonNode json = request().body().asJson();
         final JobApiModel jobApiModel = fromJson(json, JobApiModel.class);
 
-        OnDeviceChange cacheUpdateCallBack = devices -> {
-            try {
+        DeviceChangeCallBack cacheUpdateCallBack = devices -> {
                 return cacheService.setCacheAsync(devices);
-            } catch (BaseException | ExecutionException | InterruptedException e) {
-                String message = String.format("Unable to update cache");
-                if (e instanceof ExecutionException)
-                    throw new CompletionException(
-                        new ExecutionException(message, e));
-                else if (e instanceof InterruptedException)
-                    throw new CompletionException(
-                        new InterruptedException(message));
-                else
-                    throw new CompletionException(
-                        new BaseException(message, e));
-            }
         };
         if (jobApiModel.getUpdateTwin() != null) {
             return jobService.scheduleTwinUpdateAsync(

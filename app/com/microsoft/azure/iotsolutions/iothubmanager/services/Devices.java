@@ -186,7 +186,7 @@ public final class Devices implements IDevices {
     }
 
     public CompletionStage<DeviceServiceModel> createOrUpdateAsync(
-        final String id, final DeviceServiceModel device, OnDeviceChange cacheCallBack)
+        final String id, final DeviceServiceModel device, DeviceChangeCallBack cacheCallBack)
         throws InvalidInputException, ExternalDependencyException {
         if (device.getId() == null || device.getId().isEmpty()) {
             throw new InvalidInputException("Device id is empty");
@@ -228,6 +228,14 @@ public final class Devices implements IDevices {
                         log.error(message, e);
                         throw new CompletionException(
                             new ExternalDependencyException(message, e));
+                    } catch (BaseException | ExecutionException | InterruptedException e) {
+                        String message = String.format("Unable to update cache");
+                        if (e instanceof ExecutionException)
+                            throw new CompletionException(new ExecutionException(message, e));
+                        else if (e instanceof InterruptedException)
+                            throw new CompletionException(new InterruptedException(message));
+                        else
+                            throw new CompletionException(new BaseException(message, e));
                     }
                 });
         } catch (IOException | IotHubException e) {

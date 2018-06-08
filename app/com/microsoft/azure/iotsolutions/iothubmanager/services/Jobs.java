@@ -128,7 +128,7 @@ public class Jobs implements IJobs {
         DeviceTwinServiceModel twin,
         Date startTime,
         long maxExecutionTimeInSeconds,
-        OnDeviceChange cacheCallBack)
+        DeviceChangeCallBack cacheCallBack)
         throws ExternalDependencyException {
         try {
             CacheValue model = new CacheValue();
@@ -150,6 +150,14 @@ public class Jobs implements IJobs {
                 jobId, queryCondition, Json.stringify(Json.toJson(twin)));
             log.error(message, e);
             throw new ExternalDependencyException(message, e);
+        } catch (BaseException | ExecutionException | InterruptedException e) {
+            String message = String.format("Unable to update cache");
+            if (e instanceof ExecutionException)
+                throw new CompletionException(new ExecutionException(message, e));
+            else if (e instanceof InterruptedException)
+                throw new CompletionException(new InterruptedException(message));
+            else
+                throw new CompletionException(new BaseException(message, e));
         }
     }
 }

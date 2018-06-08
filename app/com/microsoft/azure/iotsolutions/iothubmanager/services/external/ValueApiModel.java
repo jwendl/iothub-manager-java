@@ -4,19 +4,19 @@ package com.microsoft.azure.iotsolutions.iothubmanager.services.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 public class ValueApiModel {
 
     private String key;
     private String data;
     private String eTag;
-    private Hashtable<String, String> metadata;
+    private HashMap<String, String> metadata;
 
     public ValueApiModel() {
     }
 
-    public ValueApiModel(String key, String data, String eTag, Hashtable<String, String> metadata) {
+    public ValueApiModel(String key, String data, String eTag, HashMap<String, String> metadata) {
         this.key = key;
         this.data = data;
         this.eTag = eTag;
@@ -51,11 +51,11 @@ public class ValueApiModel {
     }
 
     @JsonProperty("$metadata")
-    public Hashtable<String, String> getMetadata() {
+    public HashMap<String, String> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Hashtable<String, String> metadata) {
+    public void setMetadata(HashMap<String, String> metadata) {
         this.metadata = metadata;
     }
 }

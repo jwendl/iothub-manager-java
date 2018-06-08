@@ -31,7 +31,7 @@ public interface IJobs {
         DeviceTwinServiceModel twin,
         Date startTime,
         long maxExecutionTimeInSeconds,
-        OnDeviceChange cacheCallBack)
+        DeviceChangeCallBack cacheCallBack)
         throws ExternalDependencyException;
 
     CompletionStage<JobServiceModel> scheduleDeviceMethodAsync(

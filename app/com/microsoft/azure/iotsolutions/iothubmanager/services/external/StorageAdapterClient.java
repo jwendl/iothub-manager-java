@@ -30,7 +30,7 @@ public class StorageAdapterClient implements IStorageAdapterClient {
     @Inject
     public StorageAdapterClient(IHttpClient httpClient, IServicesConfig config) {
         this.httpClient = httpClient;
-        this.serviceUri = config.getStorageAdapterApiUrl();
+        this.serviceUri = config.getStorageAdapterServiceUrl();
     }
 
     @Override

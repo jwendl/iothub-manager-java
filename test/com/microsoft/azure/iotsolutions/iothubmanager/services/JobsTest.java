@@ -32,7 +32,7 @@ public class JobsTest {
     private static ArrayList<DeviceServiceModel> testDevices = new ArrayList<>();
     private static String batchId = UUID.randomUUID().toString().replace("-", "");
     public static final int MAX_RETRIES = 10;
-    private static OnDeviceChange cacheUpdateCallBack;
+    private static DeviceChangeCallBack cacheUpdateCallBack;
 
     private static boolean setUpIsDone = false;
 

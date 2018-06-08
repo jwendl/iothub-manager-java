@@ -18,7 +18,7 @@ public interface IServicesConfig {
      *
      * @return Storage Adapter service URL
      */
-    String getStorageAdapterApiUrl();
+    String getStorageAdapterServiceUrl();
 
     int getCacheTTL();
     int getCacheRebuildTimeout();

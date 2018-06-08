@@ -10,14 +10,15 @@ import java.util.List;
 public class ServicesConfig implements IServicesConfig {
 
     private String hubConnString;
-    private String storageAdapterApiUrl;
+    private String storageAdapterServiceUrl;
     private int cacheTTL;
     private int cacheRebuildTimeout;
     private List<String> cacheWhiteList;
 
-    public ServicesConfig(final String hubConnString, final String storageAdapterApiUrl, int cacheTTL, int cacheRebuildTimeout, List<String> cacheWhiteList) {
+    public ServicesConfig(final String hubConnString, final String storageAdapterApiUrl,
+                          int cacheTTL, int cacheRebuildTimeout, List<String> cacheWhiteList) {
         this.hubConnString = hubConnString;
-        this.storageAdapterApiUrl = storageAdapterApiUrl;
+        this.storageAdapterServiceUrl = storageAdapterServiceUrl;
         this.cacheWhiteList = cacheWhiteList;
         this.cacheTTL = cacheTTL;
         this.cacheRebuildTimeout = cacheRebuildTimeout;
@@ -38,8 +39,8 @@ public class ServicesConfig implements IServicesConfig {
      * @return Storage Adapter service URL
      */
     @Override
-    public String getStorageAdapterApiUrl() {
-        return storageAdapterApiUrl;
+    public String getStorageAdapterServiceUrl() {
+        return storageAdapterServiceUrl;
     }
 
     @Override

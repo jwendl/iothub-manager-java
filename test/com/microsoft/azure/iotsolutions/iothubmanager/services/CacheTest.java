@@ -30,11 +30,11 @@ public class CacheTest {
     private String cacheModel = "";
     private IServicesConfig config;
     private Cache cache;
-    private Hashtable<String, String> metadata = null;
+    private HashMap<String, String> metadata = null;
 
     @Before
     public void setUp() {
-        metadata = new Hashtable<>();
+        metadata = new HashMap<>();
         metadata.put("$modified", DateTime.now().plusDays(2).toString("yyyy-MM-dd'T'HH:mm:ssZZ"));
         mockStorageAdapterClient = Mockito.mock(IStorageAdapterClient.class);
         mockDevices = Mockito.mock(IDevices.class);
