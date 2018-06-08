@@ -34,7 +34,7 @@ public class Cache implements ICache {
     private static final String WHITELIST_TAG_PREFIX = "tags.";
     private static final String WHITELIST_REPORTED_PREFIX = "reported.";
     private static final long SERVICE_QUERY_INTERVAL_SECS = 10;
-    private static IDevices devices;
+    private final IDevices devices;
 
     @Inject
     public Cache(IStorageAdapterClient storageClient,
