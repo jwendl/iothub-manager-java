@@ -28,7 +28,7 @@ This microservice was built as part of the [Azure IoT Remote Monitoring](https:/
 
 ## Documentation
 
-* View the API documentation in the [Wiki]({link to wiki})
+* View the API documentation in the [Wiki](https://github.com/Azure/iothub-manager-java/wiki)
 * [Contributing and Development setup](CONTRIBUTING.md)
 * [Development setup, scripts and tools](DEVELOPMENT.md)
 
@@ -68,10 +68,9 @@ In order to run the service, some environment variables need to be created at le
 # Running the service in an IDE
 
 ## Prerequisites
-- Install Intellij IDEA Community: https://www.jetbrains.com/idea/download
-- Install SBT: http://www.scala-sbt.org/download.html
-- Install the latest Java 8 SDK: 
-  http://www.oracle.com/technetwork/java/javase/downloads/index.html
+- Install [Intellij IDEA Community](https://www.jetbrains.com/idea/download)
+- Install [SBT](http://www.scala-sbt.org/download.html)
+- Install the latest [Java 8 SDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
 ## Running the service with IntelliJ IDEA
 Intellij IDEA lets you open the application without using a command
@@ -140,11 +139,12 @@ directly. A copy of SBT is included in the root of the project.
   * **WebService** - Web service exposing REST interface for Iot Hub
     communication.
   * **Services** - Business logic for interacting with IoTHub
-  * **Tests** are in the **test** folder
-  * **WebService** - Tests for web services functionality
-  * **Service** - Tests for services functionality
-* Configuration files and routes are in the **conf** folder
-* The **scripts** folder contains build scripts, docker container creation scripts,
+
+* **Test** - Unit tests for the application are in this folder
+  * **WebService** - Tests for web service functionality
+  * **Service** - Tests for service functionality
+* **Conf** - Contains configuration files and routes are in the **conf** folder
+* **Scripts** - This folder contains build scripts, docker container creation scripts,
    and scripts for running the microservice from the command line
 
 ## Updating the Docker image
