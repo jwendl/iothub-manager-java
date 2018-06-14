@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashSet;
 
-public class CacheValue {
+public class DevicePropertyServiceModel {
 
     private boolean rebuilding;
     private HashSet<String> tags;
@@ -39,16 +39,16 @@ public class CacheValue {
         this.reported = reported;
     }
 
-    public CacheValue() {
+    public DevicePropertyServiceModel() {
     }
 
-    public CacheValue(HashSet<String> tags, HashSet<String> reported, boolean rebuilding) {
+    public DevicePropertyServiceModel(HashSet<String> tags, HashSet<String> reported, boolean rebuilding) {
         this.tags = tags;
         this.reported = reported;
         this.rebuilding = rebuilding;
     }
 
-    public CacheValue(HashSet<String> tags, HashSet<String> reported) {
+    public DevicePropertyServiceModel(HashSet<String> tags, HashSet<String> reported) {
         this(tags, reported, false);
     }
 

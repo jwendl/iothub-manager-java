@@ -216,7 +216,7 @@ public final class Devices implements IDevices {
                             return new DeviceServiceModel(azureDevice, new DeviceTwinServiceModel(twin), this.iotHubHostName);
                         } else {
                             this.deviceTwinClient.updateTwin(device.getTwin().toDeviceTwinDevice());
-                            CacheValue model = new CacheValue();
+                            DevicePropertyServiceModel model = new DevicePropertyServiceModel();
                             model.setTags(new HashSet<String>(device.getTwin().getTags().keySet()));
                             model.setReported(new HashSet<String>(device.getTwin().getProperties().getReported().keySet()));
                             // Update the deviceProperties cache, no need to wait

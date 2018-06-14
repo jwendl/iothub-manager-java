@@ -4,7 +4,7 @@ package com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.controllers
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.ICache;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.IDeviceProperties;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.BaseException;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.models.DevicePropertiesApiModel;
 import play.mvc.Controller;
@@ -16,15 +16,15 @@ import static play.libs.Json.toJson;
 
 @Singleton
 public class DevicePropertiesController extends Controller {
-    private final ICache cache;
+    private final IDeviceProperties cache;
 
     @Inject
-    public DevicePropertiesController(ICache cache) {
+    public DevicePropertiesController(IDeviceProperties cache) {
         this.cache = cache;
     }
 
     public CompletionStage<Result> getAllAsync() throws BaseException {
-        return cache.getCacheAsync().thenApplyAsync(m ->
+        return cache.GetListAsync().thenApplyAsync(m ->
                 ok(toJson(new DevicePropertiesApiModel(m)))
         );
     }

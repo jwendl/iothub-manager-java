@@ -23,11 +23,11 @@ public class RecurringTasks implements IRecurringTasks {
     // When generating the cache, allow some time to finish, at least one minute
     private static final int CACHE_TIMEOUT_SECS = 90;
 
-    private final ICache cache;
+    private final IDeviceProperties cache;
     private static final Logger.ALogger log = Logger.of(RecurringTasks.class);
 
     @Inject
-    public RecurringTasks(ICache cache) {
+    public RecurringTasks(IDeviceProperties cache) {
         this.cache = cache;
         CompletableFuture.runAsync(() -> this.run());
     }
@@ -42,11 +42,11 @@ public class RecurringTasks implements IRecurringTasks {
         while (true) {
             try {
                 this.log.info("Creating cache...");
-                this.cache.rebuildCacheAsync().toCompletableFuture().get(CACHE_TIMEOUT_SECS * 1000, TimeUnit.SECONDS);
-                this.log.info("Cache created");
+                this.cache.TryRecreateListAsync().toCompletableFuture().get(CACHE_TIMEOUT_SECS * 1000, TimeUnit.SECONDS);
+                this.log.info("DeviceProperties created");
                 return;
             } catch (Exception e) {
-                this.log.warn("Cache creation failed, will retry in few seconds", e);
+                this.log.warn("DeviceProperties creation failed, will retry in few seconds", e);
             }
 
             this.log.warn("Pausing thread before retrying cache creation");
@@ -68,19 +68,19 @@ public class RecurringTasks implements IRecurringTasks {
                     updateCache();
                 }
             }, 1000 * CACHE_UPDATE_SECS);
-            this.log.info("Cache update scheduled");
+            this.log.info("DeviceProperties update scheduled");
         } catch (Exception e) {
-            this.log.error("Cache update scheduling failed", e);
+            this.log.error("DeviceProperties update scheduling failed", e);
         }
     }
 
     private void updateCache() {
         try {
             this.log.info("Updating cache...");
-            this.cache.rebuildCacheAsync().toCompletableFuture().get(CACHE_TIMEOUT_SECS * 1000, TimeUnit.SECONDS);
-            this.log.info("Cache updated");
+            this.cache.TryRecreateListAsync().toCompletableFuture().get(CACHE_TIMEOUT_SECS * 1000, TimeUnit.SECONDS);
+            this.log.info("DeviceProperties updated");
         } catch (Exception e) {
-            this.log.warn("Cache update failed, will retry later", e);
+            this.log.warn("DeviceProperties update failed, will retry later", e);
         }
         this.scheduleCacheUpdate();
     }

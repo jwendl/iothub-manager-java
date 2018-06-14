@@ -24,12 +24,16 @@ public class Jobs implements IJobs {
     private IIoTHubWrapper ioTHubService;
     private final IStorageAdapterClient storageAdapterClient;
     private final JobClient jobClient;
+    private final IDeviceProperties deviceProperties;
 
     private final String DEVICE_DETAILS_QUERY_FORMAT = "select * from devices.jobs where devices.jobs.jobId = '%s'";
     private final String DEVICE_DETAILS_QUERYWITH_STATUS_FORMAT = "select * from devices.jobs where devices.jobs.jobId = '%s' and devices.jobs.status = '%s'";
 
     @Inject
-    public Jobs(final IIoTHubWrapper ioTHubService, final IStorageAdapterClient storageAdapterClient) throws Exception {
+    public Jobs(final IIoTHubWrapper ioTHubService,
+                final IStorageAdapterClient storageAdapterClient,
+                IDeviceProperties deviceProperties) throws Exception {
+        this.deviceProperties = deviceProperties;
         this.ioTHubService = ioTHubService;
         this.storageAdapterClient = storageAdapterClient;
         this.jobClient = ioTHubService.getJobClient();
@@ -127,15 +131,14 @@ public class Jobs implements IJobs {
         String queryCondition,
         DeviceTwinServiceModel twin,
         Date startTime,
-        long maxExecutionTimeInSeconds,
-        DeviceChangeCallBack cacheCallBack)
+        long maxExecutionTimeInSeconds)
         throws ExternalDependencyException {
         try {
-            CacheValue model = new CacheValue();
+            DevicePropertyServiceModel model = new DevicePropertyServiceModel();
             model.setTags(new HashSet<String>(twin.getTags().keySet()));
             model.setReported(new HashSet<String>(twin.getProperties().getReported().keySet()));
             // Update the deviceProperties cache, no need to wait
-            CompletionStage unused = cacheCallBack.updateCache(model);
+            CompletionStage unused = this.deviceProperties.UpdateListAsync(model);
 
             JobResult result = this.jobClient.scheduleUpdateTwin(
                 jobId,

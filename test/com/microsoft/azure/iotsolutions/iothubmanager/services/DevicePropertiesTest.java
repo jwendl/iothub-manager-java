@@ -6,7 +6,7 @@ import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.BaseEx
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.ResourceNotFoundException;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.external.IStorageAdapterClient;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.external.ValueApiModel;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.models.CacheValue;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DevicePropertyServiceModel;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DeviceTwinName;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.runtime.IServicesConfig;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.runtime.ServicesConfig;
@@ -24,12 +24,12 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
 
-public class CacheTest {
+public class DevicePropertiesTest {
     private IStorageAdapterClient mockStorageAdapterClient;
     private IDevices mockDevices;
     private String cacheModel = "";
     private IServicesConfig config;
-    private Cache cache;
+    private DeviceProperties deviceProperties;
     private HashMap<String, String> metadata = null;
 
     @Before
@@ -45,65 +45,65 @@ public class CacheTest {
 
     @Test(timeout = 100000)
     @Category({UnitTest.class})
-    public void getCacheAsyncTestAsync() throws BaseException, ExecutionException, InterruptedException {
+    public void GetListAsyncTestAsync() throws BaseException, ExecutionException, InterruptedException {
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", this.cacheModel, "", metadata)));
-        cache = new Cache(mockStorageAdapterClient, config, mockDevices);
-        CacheValue result = this.cache.getCacheAsync().toCompletableFuture().get();
+        deviceProperties = new DeviceProperties(mockStorageAdapterClient, config, mockDevices);
+        DevicePropertyServiceModel result = this.deviceProperties.GetListAsync().toCompletableFuture().get();
         assertEquals(String.join(",", new TreeSet<String>(result.getTags())), "a,c,y,z");
         assertEquals(String.join(",", new TreeSet<String>(result.getReported())), "1,2,3,9");
     }
 
     @Test(timeout = 100000)
     @Category({UnitTest.class})
-    public void setCacheAsyncTestAsync() throws BaseException, ExecutionException, InterruptedException {
+    public void UpdateListAsyncTestAsync() throws BaseException, ExecutionException, InterruptedException {
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", this.cacheModel, "", metadata)));
-        CacheValue resultModel = new CacheValue(new HashSet<String>(Arrays.asList("c", "a", "y", "z", "@", "#")),
+        DevicePropertyServiceModel resultModel = new DevicePropertyServiceModel(new HashSet<String>(Arrays.asList("c", "a", "y", "z", "@", "#")),
             new HashSet<String>(Arrays.asList("1", "9", "2", "3", "12", "11")), false);
-        CacheValue model = new CacheValue(new HashSet<String>(Arrays.asList("a", "y", "z", "@", "#")),
+        DevicePropertyServiceModel model = new DevicePropertyServiceModel(new HashSet<String>(Arrays.asList("a", "y", "z", "@", "#")),
             new HashSet<String>(Arrays.asList("9", "2", "3", "11", "12")), false);
         Mockito.when(mockStorageAdapterClient.updateAsync(Mockito.any(String.class), Mockito.any(String.class),
             Mockito.any(String.class), Mockito.any(String.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", Json.stringify(Json.toJson(resultModel)), "", null)));
-        cache = new Cache(mockStorageAdapterClient, config, mockDevices);
-        CacheValue result = this.cache.setCacheAsync(model).toCompletableFuture().get();
+        deviceProperties = new DeviceProperties(mockStorageAdapterClient, config, mockDevices);
+        DevicePropertyServiceModel result = this.deviceProperties.UpdateListAsync(model).toCompletableFuture().get();
         assertEquals(String.join(",", new TreeSet<String>(result.getTags())), "#,@,a,c,y,z");
         assertEquals(String.join(",", new TreeSet<String>(result.getReported())), "1,11,12,2,3,9");
     }
 
     @Test(timeout = 300000)
     @Category({UnitTest.class})
-    public void rebuildCacheAsyncSuccessTestAsync() throws Exception {
+    public void TryRecreateListAsyncSuccessTestAsync() throws Exception {
         Mockito.when(mockDevices.GetDeviceTwinNames())
             .thenReturn(new DeviceTwinName(new HashSet<>(), new HashSet<>()))
             .thenReturn(new DeviceTwinName(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>()));
 
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
-            .thenThrow(new ResourceNotFoundException("The cache is not found"))
+            .thenThrow(new ResourceNotFoundException("The deviceProperties is not found"))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", this.cacheModel, "", metadata)));
-        CacheValue emptyCacheValue = new CacheValue(new HashSet<>(), new HashSet<>(), false);
-        CacheValue noneEmptyCacheValue = new CacheValue(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>(Arrays.asList("reported.SupportedMethods")), false);
+        DevicePropertyServiceModel emptyDevicePropertyServiceModel = new DevicePropertyServiceModel(new HashSet<>(), new HashSet<>(), false);
+        DevicePropertyServiceModel noneEmptyDevicePropertyServiceModel = new DevicePropertyServiceModel(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>(Arrays.asList("reported.SupportedMethods")), false);
         Mockito.when(mockStorageAdapterClient.updateAsync(Mockito.any(String.class), Mockito.any(String.class),
             Mockito.any(String.class), Mockito.any()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", Json.stringify(Json.toJson(emptyCacheValue)), "", null)))
-            .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", Json.stringify(Json.toJson(noneEmptyCacheValue)), "", null)));
+            .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", Json.stringify(Json.toJson(emptyDevicePropertyServiceModel)), "", null)))
+            .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", Json.stringify(Json.toJson(noneEmptyDevicePropertyServiceModel)), "", null)));
 
-        cache = new Cache(mockStorageAdapterClient, config, mockDevices);
-        Boolean result = (Boolean) this.cache.rebuildCacheAsync(false).toCompletableFuture().get();
+        deviceProperties = new DeviceProperties(mockStorageAdapterClient, config, mockDevices);
+        Boolean result = (Boolean) this.deviceProperties.TryRecreateListAsync(false).toCompletableFuture().get();
         assertTrue(result);
     }
 
     @Test(timeout = 100000)
     @Category({UnitTest.class})
-    public void rebuildCacheAsyncFailureTestAsync() throws Exception {
+    public void TryRecreateListAsyncFailureTestAsync() throws Exception {
         Mockito.when(mockDevices.GetDeviceTwinNames())
             .thenReturn(new DeviceTwinName(new HashSet<>(Arrays.asList("tags.FieldService")), new HashSet<>()));
         String rebuildingCacheModel = "{\"Rebuilding\": true,\"Tags\": null,\"Reported\": null }";
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", rebuildingCacheModel, "", metadata)));
-        cache = new Cache(mockStorageAdapterClient, config, mockDevices);
-        Boolean result = (Boolean) this.cache.rebuildCacheAsync(false).toCompletableFuture().get();
+        deviceProperties = new DeviceProperties(mockStorageAdapterClient, config, mockDevices);
+        Boolean result = (Boolean) this.deviceProperties.TryRecreateListAsync(false).toCompletableFuture().get();
         assertFalse(result);
     }
 }

@@ -30,8 +30,7 @@ public interface IJobs {
         String queryCondition,
         DeviceTwinServiceModel twin,
         Date startTime,
-        long maxExecutionTimeInSeconds,
-        DeviceChangeCallBack cacheCallBack)
+        long maxExecutionTimeInSeconds)
         throws ExternalDependencyException;
 
     CompletionStage<JobServiceModel> scheduleDeviceMethodAsync(

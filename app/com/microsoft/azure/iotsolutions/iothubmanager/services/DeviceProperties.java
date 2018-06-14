@@ -8,7 +8,7 @@ import com.microsoft.azure.iotsolutions.iothubmanager.services.runtime.IServices
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.external.*;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.helpers.StorageWriteLock;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.models.CacheValue;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DevicePropertyServiceModel;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DeviceTwinName;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -22,10 +22,10 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 @Singleton
-public class Cache implements ICache {
+public class DeviceProperties implements IDeviceProperties {
 
     private final IStorageAdapterClient storageClient;
-    private static final Logger.ALogger log = Logger.of(Cache.class);
+    private static final Logger.ALogger log = Logger.of(DeviceProperties.class);
     private final int cacheTTL;
     private final int rebuildTimeout;
     private final String CacheCollectionId = "cache";
@@ -37,9 +37,9 @@ public class Cache implements ICache {
     private final IDevices devices;
 
     @Inject
-    public Cache(IStorageAdapterClient storageClient,
-                 IServicesConfig config,
-                 IDevices devices) throws ExternalDependencyException {
+    public DeviceProperties(IStorageAdapterClient storageClient,
+                            IServicesConfig config,
+                            IDevices devices) throws ExternalDependencyException {
         this.storageClient = storageClient;
         this.cacheTTL = config.getCacheTTL();
         this.rebuildTimeout = config.getCacheRebuildTimeout();
@@ -48,41 +48,41 @@ public class Cache implements ICache {
     }
 
     @Override
-    public CompletionStage<CacheValue> getCacheAsync() {
+    public CompletionStage<DevicePropertyServiceModel> GetListAsync() {
         try {
             return storageClient.getAsync(CacheCollectionId, CacheKey).thenApplyAsync(m ->
-                Json.fromJson(Json.parse(m.getData()), CacheValue.class)
+                Json.fromJson(Json.parse(m.getData()), DevicePropertyServiceModel.class)
             );
         } catch (Exception ex) {
             log.info(String.format("%s:%s not found.", CacheCollectionId, CacheKey), ex);
-            return CompletableFuture.completedFuture(new CacheValue(new HashSet<>(), new HashSet<>()));
+            return CompletableFuture.completedFuture(new DevicePropertyServiceModel(new HashSet<>(), new HashSet<>()));
         }
     }
 
     @Override
-    public CompletionStage<CacheValue> setCacheAsync(CacheValue cacheValuesToAdd) throws BaseException {
-        if (cacheValuesToAdd.getReported() == null) {
-            cacheValuesToAdd.setReported(new HashSet<>());
+    public CompletionStage<DevicePropertyServiceModel> UpdateListAsync(DevicePropertyServiceModel devicePropertyServiceModel) throws BaseException {
+        if (devicePropertyServiceModel.getReported() == null) {
+            devicePropertyServiceModel.setReported(new HashSet<>());
         }
-        if (cacheValuesToAdd.getTags() == null) {
-            cacheValuesToAdd.setTags(new HashSet<>());
+        if (devicePropertyServiceModel.getTags() == null) {
+            devicePropertyServiceModel.setTags(new HashSet<>());
         }
         String etag = null;
         while (true) {
             ValueApiModel model = this.getCurrentCacheFromStorage();
             if (model != null) {
                 etag = model.getETag();
-                CacheValue cacheServer = Json.fromJson(Json.parse(model.getData()), CacheValue.class);
-                this.updateCacheValues(model, cacheValuesToAdd);
-                if (cacheValuesToAdd.getTags().size() == cacheServer.getTags().size() && cacheValuesToAdd.getReported().size() == cacheServer.getReported().size()) {
-                    return CompletableFuture.completedFuture(cacheValuesToAdd);
+                DevicePropertyServiceModel cacheServer = Json.fromJson(Json.parse(model.getData()), DevicePropertyServiceModel.class);
+                this.updateDevicePropertyValues(model, devicePropertyServiceModel);
+                if (devicePropertyServiceModel.getTags().size() == cacheServer.getTags().size() && devicePropertyServiceModel.getReported().size() == cacheServer.getReported().size()) {
+                    return CompletableFuture.completedFuture(devicePropertyServiceModel);
                 }
             }
 
-            String value = Json.stringify(Json.toJson(cacheValuesToAdd));
+            String value = Json.stringify(Json.toJson(devicePropertyServiceModel));
             try {
                 return this.storageClient.updateAsync(CacheCollectionId, CacheKey, value, etag).thenApplyAsync(m ->
-                    Json.fromJson(Json.parse(m.getData()), CacheValue.class)
+                    Json.fromJson(Json.parse(m.getData()), DevicePropertyServiceModel.class)
                 );
             } catch (ConflictingResourceException e) {
                 log.info("SetCacheAsync Conflicted ");
@@ -92,9 +92,9 @@ public class Cache implements ICache {
     }
 
     @Override
-    public CompletionStage rebuildCacheAsync(boolean force) throws Exception {
-        StorageWriteLock<CacheValue> lock = new StorageWriteLock<>(
-            CacheValue.class,
+    public CompletionStage TryRecreateListAsync(boolean force) throws Exception {
+        StorageWriteLock<DevicePropertyServiceModel> lock = new StorageWriteLock<>(
+            DevicePropertyServiceModel.class,
             this.storageClient,
             CacheCollectionId,
             CacheKey,
@@ -123,7 +123,7 @@ public class Cache implements ICache {
 
             Optional<Boolean> locked = this.lockCache(lock);
             if (locked == null) {
-                this.log.warn(String.format("Cache rebuilding: lock failed due to conflict. Retry after %d seconds", this.SERVICE_QUERY_INTERVAL_SECS));
+                this.log.warn(String.format("DeviceProperties rebuilding: lock failed due to conflict. Retry after %d seconds", this.SERVICE_QUERY_INTERVAL_SECS));
                 Thread.sleep(this.SERVICE_QUERY_INTERVAL_SECS * 1000);
                 continue;
             }
@@ -143,40 +143,40 @@ public class Cache implements ICache {
 
     private boolean shouldRebuild(boolean force, ValueApiModel twin) {
         if (force) {
-            this.log.info("Cache will be rebuilt due to the force flag");
+            this.log.info("DeviceProperties will be rebuilt due to the force flag");
             return true;
         }
 
         if (twin == null) {
-            this.log.info("Cache will be rebuilt since no cache was found");
+            this.log.info("DeviceProperties will be rebuilt since no cache was found");
             return true;
         }
 
-        CacheValue cacheValue;
+        DevicePropertyServiceModel devicePropertyServiceModel;
         try {
-            cacheValue = Json.fromJson(Json.parse(twin.getData()), CacheValue.class);
+            devicePropertyServiceModel = Json.fromJson(Json.parse(twin.getData()), DevicePropertyServiceModel.class);
         } catch (Exception e) {
-            this.log.info("Cache will be rebuilt since the last one is broken.");
+            this.log.info("DeviceProperties will be rebuilt since the last one is broken.");
             return true;
         }
 
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ");
         DateTime timestamp = formatter.parseDateTime(twin.getMetadata().get("$modified"));
-        if (cacheValue.isRebuilding()) {
+        if (devicePropertyServiceModel.isRebuilding()) {
             if (timestamp.plusSeconds(this.rebuildTimeout).isBeforeNow()) {
-                this.log.info("Cache will be rebuilt since last rebuilding timedout");
+                this.log.info("DeviceProperties will be rebuilt since last rebuilding timedout");
                 return true;
             }
-            this.log.info("Cache rebuilding skipped since it was being rebuilt by other instance");
+            this.log.info("DeviceProperties rebuilding skipped since it was being rebuilt by other instance");
             return false;
-        } else if (cacheValue.isNullOrEmpty()) {
-            this.log.info("Cache will be rebuilt since it is empty");
+        } else if (devicePropertyServiceModel.isNullOrEmpty()) {
+            this.log.info("DeviceProperties will be rebuilt since it is empty");
             return true;
         } else if (timestamp.plusSeconds(this.cacheTTL).isBeforeNow()) {
-            this.log.info("Cache will be rebuilt since it has expired");
+            this.log.info("DeviceProperties will be rebuilt since it has expired");
             return true;
         } else {
-            this.log.info("Cache rebuilding skipped since it has not expired");
+            this.log.info("DeviceProperties rebuilding skipped since it has not expired");
             return false;
         }
     }
@@ -233,13 +233,13 @@ public class Cache implements ICache {
         return null;
     }
 
-    private void updateCacheValues(ValueApiModel cacheFromStorage, CacheValue cacheValuesToAdd) {
+    private void updateDevicePropertyValues(ValueApiModel cacheFromStorage, DevicePropertyServiceModel cacheValuesToAdd) {
         if (cacheFromStorage != null) {
-            CacheValue cacheServer;
+            DevicePropertyServiceModel cacheServer;
             try {
-                cacheServer = Json.fromJson(Json.parse(cacheFromStorage.getData()), CacheValue.class);
+                cacheServer = Json.fromJson(Json.parse(cacheFromStorage.getData()), DevicePropertyServiceModel.class);
             } catch (Exception e) {
-                cacheServer = new CacheValue();
+                cacheServer = new DevicePropertyServiceModel();
             }
             if (cacheServer.getTags() == null) {
                 cacheServer.setTags(new HashSet<String>());
@@ -252,7 +252,7 @@ public class Cache implements ICache {
         }
     }
 
-    private Optional<Boolean> lockCache(StorageWriteLock<CacheValue> lock) throws ExternalDependencyException, ResourceOutOfDateException {
+    private Optional<Boolean> lockCache(StorageWriteLock<DevicePropertyServiceModel> lock) throws ExternalDependencyException, ResourceOutOfDateException {
         try {
             return lock.tryLockAsync().toCompletableFuture().get();
         } catch (InterruptedException | ExecutionException e) {
@@ -266,9 +266,9 @@ public class Cache implements ICache {
         return twinNames;
     }
 
-    private Boolean writeAndUnlockCache(StorageWriteLock<CacheValue> lock, DeviceTwinName twinNames) throws ExternalDependencyException, ResourceOutOfDateException {
+    private Boolean writeAndUnlockCache(StorageWriteLock<DevicePropertyServiceModel> lock, DeviceTwinName twinNames) throws ExternalDependencyException, ResourceOutOfDateException {
         try {
-            return lock.writeAndReleaseAsync(new CacheValue(twinNames.getTags(), twinNames.getReportedProperties())).toCompletableFuture().get();
+            return lock.writeAndReleaseAsync(new DevicePropertyServiceModel(twinNames.getTags(), twinNames.getReportedProperties())).toCompletableFuture().get();
         } catch (InterruptedException | ExecutionException e) {
             String errorMessage = String.format("failed to WriteAndRelease lock for %s,%s ", CacheCollectionId, CacheKey);
             this.log.error(errorMessage, e);

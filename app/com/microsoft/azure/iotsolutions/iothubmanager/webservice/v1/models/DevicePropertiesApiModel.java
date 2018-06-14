@@ -3,7 +3,7 @@
 package com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.microsoft.azure.iotsolutions.iothubmanager.services.models.CacheValue;
+import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DevicePropertyServiceModel;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.Version;
 
 import java.util.HashSet;
@@ -44,15 +44,15 @@ public class DevicePropertiesApiModel {
     public DevicePropertiesApiModel() {
     }
 
-    public DevicePropertiesApiModel(CacheValue model) {
+    public DevicePropertiesApiModel(DevicePropertyServiceModel model) {
         this.tags = model.getTags();
         this.reported = model.getReported();
         metadata = new Hashtable<String, String>();
-        metadata.put("$type", String.format("DeviceProperties;%s", Version.NUMBER));
+        metadata.put("$type", String.format("DevicePropertyList;%s", Version.NUMBER));
         metadata.put("$url", String.format("/%s/deviceProperties", Version.PATH));
     }
 
-    public CacheValue ToServiceModel() {
-        return new CacheValue(tags, reported);
+    public DevicePropertyServiceModel ToServiceModel() {
+        return new DevicePropertyServiceModel(tags, reported);
     }
 }

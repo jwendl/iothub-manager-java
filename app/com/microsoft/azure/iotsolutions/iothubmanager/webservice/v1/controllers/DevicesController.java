@@ -18,13 +18,13 @@ import static play.libs.Json.toJson;
 public final class DevicesController extends Controller {
 
     private final IDevices deviceService;
-    private final ICache cacheService;
+    private final IDeviceProperties deviceProperties;
     final String ContinuationTokenName = "x-ms-continuation";
 
     @Inject
-    public DevicesController(final IDevices deviceService, final ICache cacheService) {
+    public DevicesController(final IDevices deviceService, final IDeviceProperties deviceProperties) {
         this.deviceService = deviceService;
-        this.cacheService = cacheService;
+        this.deviceProperties = deviceProperties;
     }
 
     public CompletionStage<Result> getDevicesAsync(String query) throws ExternalDependencyException {
@@ -68,12 +68,12 @@ public final class DevicesController extends Controller {
     public CompletionStage<Result> putAsync(final String id) throws InvalidInputException, ExternalDependencyException {
         JsonNode json = request().body().asJson();
         final DeviceRegistryApiModel device = fromJson(json, DeviceRegistryApiModel.class);
-        ICache cacheService = this.cacheService;
+        IDeviceProperties deviceProperties = this.deviceProperties;
 
-        DeviceChangeCallBack cacheUpdateCallBack = devices -> {
-                return cacheService.setCacheAsync(devices);
+        DeviceChangeCallBack devicePropertiesCallBack = devices -> {
+                return deviceProperties.UpdateListAsync(devices);
         };
-        return deviceService.createOrUpdateAsync(id, device.toServiceModel(), cacheUpdateCallBack)
+        return deviceService.createOrUpdateAsync(id, device.toServiceModel(), devicePropertiesCallBack)
             .thenApply(newDevice -> ok(toJson(new DeviceRegistryApiModel(newDevice))));
     }
 

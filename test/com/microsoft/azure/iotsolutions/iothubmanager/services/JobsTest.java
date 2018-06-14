@@ -28,6 +28,7 @@ public class JobsTest {
     private static String MockServiceUri = "http://mockstorageadapter";
     private static IIoTHubWrapper ioTHubWrapper;
     private static IDevices deviceService;
+    private static IDeviceProperties mockDeviceProperties;
     private static IJobs jobService;
     private static ArrayList<DeviceServiceModel> testDevices = new ArrayList<>();
     private static String batchId = UUID.randomUUID().toString().replace("-", "");
@@ -38,6 +39,7 @@ public class JobsTest {
 
     @Before
     public void setUp() {
+        mockDeviceProperties = Mockito.mock(IDeviceProperties.class);
         mockHttpClient = Mockito.mock(IHttpClient.class);
     }
 
@@ -54,13 +56,10 @@ public class JobsTest {
             new ServicesConfig(null, MockServiceUri, 0, 0, null));
         ioTHubWrapper = new IoTHubWrapper(servicesConfig);
         deviceService = new Devices(ioTHubWrapper, storageAdapterClient);
-        jobService = new Jobs(ioTHubWrapper, storageAdapterClient);
+        mockDeviceProperties = new DeviceProperties(storageAdapterClient, servicesConfig, deviceService);
+        jobService = new Jobs(ioTHubWrapper, storageAdapterClient, mockDeviceProperties);
 
         createTestDevices(2, batchId);
-        cacheUpdateCallBack = devices -> {
-            //mock callback - does nothing
-            return new CompletableFuture();
-        };
 
         setUpIsDone = true;
     }
@@ -79,7 +78,7 @@ public class JobsTest {
 
     @Test(timeout = 100000)
     @Category({IntegrationTest.class})
-    public void getJobsAsyncTest() throws Exception {
+    public void GetListAsyncTest() throws Exception {
         long from = 0;
         long to = new Date().getTime();
         List<JobServiceModel> jobs = jobService.getJobsAsync(
@@ -136,12 +135,14 @@ public class JobsTest {
         DeviceTwinProperties properties = new DeviceTwinProperties(desired, reported);
         DeviceTwinServiceModel twin = new DeviceTwinServiceModel("*", "", properties, tags, true);
 
-        IJobs twinJobService = new Jobs(ioTHubWrapper, storageAdapterClient);
+        IJobs twinJobService = new Jobs(ioTHubWrapper, storageAdapterClient, mockDeviceProperties);
+        Mockito.when(mockDeviceProperties.UpdateListAsync(new DevicePropertyServiceModel()))
+            .thenReturn(CompletableFuture.supplyAsync(() -> new DevicePropertyServiceModel()));
         // retry scheduling job with back off time when throttled by IotHub
         for (int i = 1; i <= MAX_RETRIES; i++) {
             try {
                 String newJobId = jobIdPrefix + i;
-                twinJobService.scheduleTwinUpdateAsync(newJobId, condition, twin, new Date(), 120, cacheUpdateCallBack).toCompletableFuture().get();
+                twinJobService.scheduleTwinUpdateAsync(newJobId, condition, twin, new Date(), 120).toCompletableFuture().get();
                 JobServiceModel newJob = twinJobService.getJobAsync(newJobId, false, null).toCompletableFuture().get();
                 Assert.assertEquals(newJobId, newJob.getJobId());
                 Assert.assertEquals(JobType.scheduleUpdateTwin, newJob.getJobType());
@@ -161,7 +162,7 @@ public class JobsTest {
                     System.out.println(String.format("Warning: job scheduling is throttled and will be retried(%d) after 30s", i));
                     Thread.sleep(30000);
                     // reconnect to IotHub
-                    twinJobService = new Jobs(ioTHubWrapper, storageAdapterClient);
+                    twinJobService = new Jobs(ioTHubWrapper, storageAdapterClient, mockDeviceProperties);
                     continue;
                 } else {
                     Assert.fail(String.format("failed to schedule twin job due to %s", e.getCause().getMessage()));
@@ -207,7 +208,7 @@ public class JobsTest {
                     System.out.println(String.format("Warning: job scheduling is throttled and will be retried(%d) after 30s", i));
                     Thread.sleep(30000);
                     // reconnect to IotHub
-                    jobService = new Jobs(ioTHubWrapper, storageAdapterClient);
+                    jobService = new Jobs(ioTHubWrapper, storageAdapterClient, mockDeviceProperties);
                     continue;
                 } else {
                     Assert.fail("failed to schedule method job");

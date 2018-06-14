@@ -25,14 +25,12 @@ import static play.libs.Json.toJson;
 public final class JobsController extends Controller {
 
     private static final Logger.ALogger log = Logger.of(JobsController.class);
-    private final ICache cacheService;
 
     private final IJobs jobService;
 
     @Inject
-    public JobsController(final IJobs jobService, final ICache cacheService) {
+    public JobsController(final IJobs jobService) {
         this.jobService = jobService;
-        this.cacheService = cacheService;
     }
 
     public CompletionStage<Result> getJobsAsync()
@@ -96,9 +94,6 @@ public final class JobsController extends Controller {
         JsonNode json = request().body().asJson();
         final JobApiModel jobApiModel = fromJson(json, JobApiModel.class);
 
-        DeviceChangeCallBack cacheUpdateCallBack = devices -> {
-                return cacheService.setCacheAsync(devices);
-        };
         if (jobApiModel.getUpdateTwin() != null) {
             return jobService.scheduleTwinUpdateAsync(
                 jobApiModel.getJobId(),
@@ -107,8 +102,7 @@ public final class JobsController extends Controller {
                 jobApiModel.getStartTimeUtc() == null ?
                     DateTime.now(DateTimeZone.UTC).toDate() : jobApiModel.getStartTimeUtc(),
                 jobApiModel.getMaxExecutionTimeInSeconds() == null ?
-                    3600 : jobApiModel.getMaxExecutionTimeInSeconds(),
-                cacheUpdateCallBack)
+                    3600 : jobApiModel.getMaxExecutionTimeInSeconds())
                 .thenApply(job -> ok(toJson(new JobApiModel(job))));
         }
 
