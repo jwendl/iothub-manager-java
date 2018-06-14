@@ -70,7 +70,7 @@ public final class DevicesController extends Controller {
         final DeviceRegistryApiModel device = fromJson(json, DeviceRegistryApiModel.class);
         IDeviceProperties deviceProperties = this.deviceProperties;
 
-        DeviceChangeCallBack devicePropertiesCallBack = devices -> {
+        DevicePropertyCallBack devicePropertiesCallBack = devices -> {
                 return deviceProperties.UpdateListAsync(devices);
         };
         return deviceService.createOrUpdateAsync(id, device.toServiceModel(), devicePropertiesCallBack)

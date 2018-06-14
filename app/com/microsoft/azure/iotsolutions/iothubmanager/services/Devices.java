@@ -186,7 +186,7 @@ public final class Devices implements IDevices {
     }
 
     public CompletionStage<DeviceServiceModel> createOrUpdateAsync(
-        final String id, final DeviceServiceModel device, DeviceChangeCallBack cacheCallBack)
+        final String id, final DeviceServiceModel device, DevicePropertyCallBack devicePropertyCallBack)
         throws InvalidInputException, ExternalDependencyException {
         if (device.getId() == null || device.getId().isEmpty()) {
             throw new InvalidInputException("Device id is empty");
@@ -220,7 +220,7 @@ public final class Devices implements IDevices {
                             model.setTags(new HashSet<String>(device.getTwin().getTags().keySet()));
                             model.setReported(new HashSet<String>(device.getTwin().getProperties().getReported().keySet()));
                             // Update the deviceProperties cache, no need to wait
-                            CompletionStage unused = cacheCallBack.updateCache(model);
+                            CompletionStage unused = devicePropertyCallBack.updateCache(model);
                             return new DeviceServiceModel(azureDevice, device.getTwin(), this.iotHubHostName);
                         }
                     } catch (IOException | IotHubException e) {

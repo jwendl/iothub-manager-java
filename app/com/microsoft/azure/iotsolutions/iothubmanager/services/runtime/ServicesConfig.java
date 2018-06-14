@@ -11,17 +11,17 @@ public class ServicesConfig implements IServicesConfig {
 
     private String hubConnString;
     private String storageAdapterServiceUrl;
-    private int cacheTTL;
-    private int cacheRebuildTimeout;
-    private List<String> cacheWhiteList;
+    private int devicePropertiesTTL;
+    private int devicePropertiesRebuildTimeout;
+    private List<String> devicePropertiesWhiteList;
 
-    public ServicesConfig(final String hubConnString, final String storageAdapterApiUrl,
-                          int cacheTTL, int cacheRebuildTimeout, List<String> cacheWhiteList) {
+    public ServicesConfig(final String hubConnString, final String storageAdapterServiceUrl,
+                          int devicePropertiesTTL, int devicePropertiesRebuildTimeout, List<String> devicePropertiesWhiteList) {
         this.hubConnString = hubConnString;
         this.storageAdapterServiceUrl = storageAdapterServiceUrl;
-        this.cacheWhiteList = cacheWhiteList;
-        this.cacheTTL = cacheTTL;
-        this.cacheRebuildTimeout = cacheRebuildTimeout;
+        this.devicePropertiesWhiteList = devicePropertiesWhiteList;
+        this.devicePropertiesTTL = devicePropertiesTTL;
+        this.devicePropertiesRebuildTimeout = devicePropertiesRebuildTimeout;
     }
 
     /**
@@ -44,17 +44,17 @@ public class ServicesConfig implements IServicesConfig {
     }
 
     @Override
-    public int getCacheTTL() {
-        return cacheTTL;
+    public int getDevicePropertiesTTL() {
+        return devicePropertiesTTL;
     }
 
     @Override
-    public int getCacheRebuildTimeout() {
-        return cacheRebuildTimeout;
+    public int getDevicePropertiesRebuildTimeout() {
+        return devicePropertiesRebuildTimeout;
     }
 
     @Override
-    public List<String> getCacheWhiteList() {
-        return cacheWhiteList;
+    public List<String> getDevicePropertiesWhiteList() {
+        return devicePropertiesWhiteList;
     }
 }

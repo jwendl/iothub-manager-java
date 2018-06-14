@@ -6,6 +6,6 @@ import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DeviceProp
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
-public interface DeviceChangeCallBack {
+public interface DevicePropertyCallBack {
     public CompletionStage updateCache(DevicePropertyServiceModel devices) throws InterruptedException, ExecutionException, BaseException, BaseException;
 }

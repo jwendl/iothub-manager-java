@@ -20,7 +20,7 @@ public interface IServicesConfig {
      */
     String getStorageAdapterServiceUrl();
 
-    int getCacheTTL();
-    int getCacheRebuildTimeout();
-    List<String> getCacheWhiteList();
+    int getDevicePropertiesTTL();
+    int getDevicePropertiesRebuildTimeout();
+    List<String> getDevicePropertiesWhiteList();
 }

@@ -38,7 +38,7 @@ public class DevicesTest {
     private static ArrayList<DeviceClient> testDeviceEmulators = new ArrayList<>();
     private static String batchId = UUID.randomUUID().toString().replace("-", "");
     private static final String MALFORMED_JSON_EXCEED_5_LEVELS = "Malformed Json: exceed 5 levels";
-    private static DeviceChangeCallBack cacheUpdateCallBack;
+    private static DevicePropertyCallBack cacheUpdateCallBack;
 
     private static boolean setUpIsDone = false;
 

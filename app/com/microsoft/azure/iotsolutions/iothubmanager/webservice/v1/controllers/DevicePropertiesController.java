@@ -16,15 +16,15 @@ import static play.libs.Json.toJson;
 
 @Singleton
 public class DevicePropertiesController extends Controller {
-    private final IDeviceProperties cache;
+    private final IDeviceProperties deviceProperties;
 
     @Inject
-    public DevicePropertiesController(IDeviceProperties cache) {
-        this.cache = cache;
+    public DevicePropertiesController(IDeviceProperties deviceProperties) {
+        this.deviceProperties = deviceProperties;
     }
 
     public CompletionStage<Result> getAllAsync() throws BaseException {
-        return cache.GetListAsync().thenApplyAsync(m ->
+        return this.deviceProperties.GetListAsync().thenApplyAsync(m ->
                 ok(toJson(new DevicePropertiesApiModel(m)))
         );
     }

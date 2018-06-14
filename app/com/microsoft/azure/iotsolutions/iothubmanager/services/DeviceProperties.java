@@ -26,11 +26,11 @@ public class DeviceProperties implements IDeviceProperties {
 
     private final IStorageAdapterClient storageClient;
     private static final Logger.ALogger log = Logger.of(DeviceProperties.class);
-    private final int cacheTTL;
-    private final int rebuildTimeout;
+    private final int devicePropertiesTTL;
+    private final int devicePropertiesRebuildTimeout;
     private final String CacheCollectionId = "cache";
     private final String CacheKey = "twin";
-    private final List<String> cacheWhitelist;
+    private final List<String> devicePropertiesWhitelist;
     private static final String WHITELIST_TAG_PREFIX = "tags.";
     private static final String WHITELIST_REPORTED_PREFIX = "reported.";
     private static final long SERVICE_QUERY_INTERVAL_SECS = 10;
@@ -41,9 +41,9 @@ public class DeviceProperties implements IDeviceProperties {
                             IServicesConfig config,
                             IDevices devices) throws ExternalDependencyException {
         this.storageClient = storageClient;
-        this.cacheTTL = config.getCacheTTL();
-        this.rebuildTimeout = config.getCacheRebuildTimeout();
-        this.cacheWhitelist = config.getCacheWhiteList();
+        this.devicePropertiesTTL = config.getDevicePropertiesTTL();
+        this.devicePropertiesRebuildTimeout = config.getDevicePropertiesRebuildTimeout();
+        this.devicePropertiesWhitelist = config.getDevicePropertiesWhiteList();
         this.devices = devices;
     }
 
@@ -69,12 +69,12 @@ public class DeviceProperties implements IDeviceProperties {
         }
         String etag = null;
         while (true) {
-            ValueApiModel model = this.getCurrentCacheFromStorage();
+            ValueApiModel model = this.getCurrentDevicePropertiesFromStorage();
             if (model != null) {
                 etag = model.getETag();
-                DevicePropertyServiceModel cacheServer = Json.fromJson(Json.parse(model.getData()), DevicePropertyServiceModel.class);
+                DevicePropertyServiceModel devicePropertiesFromStorage = Json.fromJson(Json.parse(model.getData()), DevicePropertyServiceModel.class);
                 this.updateDevicePropertyValues(model, devicePropertyServiceModel);
-                if (devicePropertyServiceModel.getTags().size() == cacheServer.getTags().size() && devicePropertyServiceModel.getReported().size() == cacheServer.getReported().size()) {
+                if (devicePropertyServiceModel.getTags().size() == devicePropertiesFromStorage.getTags().size() && devicePropertyServiceModel.getReported().size() == devicePropertiesFromStorage.getReported().size()) {
                     return CompletableFuture.completedFuture(devicePropertyServiceModel);
                 }
             }
@@ -163,7 +163,7 @@ public class DeviceProperties implements IDeviceProperties {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ");
         DateTime timestamp = formatter.parseDateTime(twin.getMetadata().get("$modified"));
         if (devicePropertyServiceModel.isRebuilding()) {
-            if (timestamp.plusSeconds(this.rebuildTimeout).isBeforeNow()) {
+            if (timestamp.plusSeconds(this.devicePropertiesRebuildTimeout).isBeforeNow()) {
                 this.log.info("DeviceProperties will be rebuilt since last rebuilding timedout");
                 return true;
             }
@@ -172,7 +172,7 @@ public class DeviceProperties implements IDeviceProperties {
         } else if (devicePropertyServiceModel.isNullOrEmpty()) {
             this.log.info("DeviceProperties will be rebuilt since it is empty");
             return true;
-        } else if (timestamp.plusSeconds(this.cacheTTL).isBeforeNow()) {
+        } else if (timestamp.plusSeconds(this.devicePropertiesTTL).isBeforeNow()) {
             this.log.info("DeviceProperties will be rebuilt since it has expired");
             return true;
         } else {
@@ -183,7 +183,7 @@ public class DeviceProperties implements IDeviceProperties {
 
     private CompletionStage<DeviceTwinName> getValidNamesAsync() throws ExternalDependencyException {
         DeviceTwinName fullNameWhitelist = new DeviceTwinName(), prefixWhitelist = new DeviceTwinName();
-        this.parseWhitelist(this.cacheWhitelist, fullNameWhitelist, prefixWhitelist);
+        this.parseWhitelist(this.devicePropertiesWhitelist, fullNameWhitelist, prefixWhitelist);
 
         DeviceTwinName validNames = new DeviceTwinName(fullNameWhitelist.getTags(), fullNameWhitelist.getReportedProperties());
 
@@ -221,7 +221,7 @@ public class DeviceProperties implements IDeviceProperties {
         prefixWhitelist.setReportedProperties(new HashSet<>(regexReported));
     }
 
-    private ValueApiModel getCurrentCacheFromStorage() throws ExternalDependencyException {
+    private ValueApiModel getCurrentDevicePropertiesFromStorage() throws ExternalDependencyException {
         try {
             return this.storageClient.getAsync(CacheCollectionId, CacheKey).toCompletableFuture().get();
         } catch (ResourceNotFoundException e) {
@@ -233,22 +233,22 @@ public class DeviceProperties implements IDeviceProperties {
         return null;
     }
 
-    private void updateDevicePropertyValues(ValueApiModel cacheFromStorage, DevicePropertyServiceModel cacheValuesToAdd) {
-        if (cacheFromStorage != null) {
-            DevicePropertyServiceModel cacheServer;
+    private void updateDevicePropertyValues(ValueApiModel valueApiModel, DevicePropertyServiceModel devicePropertiesToAdd) {
+        if (valueApiModel != null) {
+            DevicePropertyServiceModel devicePropertiesFromStorage;
             try {
-                cacheServer = Json.fromJson(Json.parse(cacheFromStorage.getData()), DevicePropertyServiceModel.class);
+                devicePropertiesFromStorage = Json.fromJson(Json.parse(valueApiModel.getData()), DevicePropertyServiceModel.class);
             } catch (Exception e) {
-                cacheServer = new DevicePropertyServiceModel();
+                devicePropertiesFromStorage = new DevicePropertyServiceModel();
             }
-            if (cacheServer.getTags() == null) {
-                cacheServer.setTags(new HashSet<String>());
+            if (devicePropertiesFromStorage.getTags() == null) {
+                devicePropertiesFromStorage.setTags(new HashSet<String>());
             }
-            if (cacheServer.getReported() == null) {
-                cacheServer.setReported(new HashSet<String>());
+            if (devicePropertiesFromStorage.getReported() == null) {
+                devicePropertiesFromStorage.setReported(new HashSet<String>());
             }
-            cacheValuesToAdd.getTags().addAll(cacheServer.getTags());
-            cacheValuesToAdd.getReported().addAll(cacheServer.getReported());
+            devicePropertiesToAdd.getTags().addAll(devicePropertiesFromStorage.getTags());
+            devicePropertiesToAdd.getReported().addAll(devicePropertiesFromStorage.getReported());
         }
     }
 
