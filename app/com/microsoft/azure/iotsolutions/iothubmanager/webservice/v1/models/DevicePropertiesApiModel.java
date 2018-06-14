@@ -6,30 +6,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DevicePropertyServiceModel;
 import com.microsoft.azure.iotsolutions.iothubmanager.webservice.v1.Version;
 
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.*;
 
 public class DevicePropertiesApiModel {
-    private HashSet<String> tags;
-    private HashSet<String> reported;
+    private TreeSet<String> items;
     private Hashtable<String, String> metadata;
 
-    @JsonProperty("Tags")
-    public HashSet<String> getTags() {
-        return tags;
+
+    private final String tagPrefix = "tags.";
+    private final String reportedPrefix = "properties.reported.";
+
+    @JsonProperty("Items")
+    public TreeSet<String> getItems() {
+        return items;
     }
 
-    public void setTags(HashSet<String> tags) {
-        this.tags = tags;
-    }
-
-    @JsonProperty("Reported")
-    public HashSet<String> getReported() {
-        return reported;
-    }
-
-    public void setReported(HashSet<String> reported) {
-        this.reported = reported;
+    public void setItems(TreeSet<String> items) {
+        this.items = items;
     }
 
     @JsonProperty("$metadata")
@@ -45,14 +38,16 @@ public class DevicePropertiesApiModel {
     }
 
     public DevicePropertiesApiModel(DevicePropertyServiceModel model) {
-        this.tags = model.getTags();
-        this.reported = model.getReported();
+        items = new TreeSet<String>();
+        for (String tag : model.getTags()) {
+            items.add(tagPrefix + tag);
+        }
+        for (String reported : model.getReported()) {
+            items.add(reportedPrefix + reported);
+        }
+        items = (TreeSet<String>) items.descendingSet();
         metadata = new Hashtable<String, String>();
         metadata.put("$type", String.format("DevicePropertyList;%s", Version.NUMBER));
         metadata.put("$url", String.format("/%s/deviceProperties", Version.PATH));
-    }
-
-    public DevicePropertyServiceModel ToServiceModel() {
-        return new DevicePropertyServiceModel(tags, reported);
     }
 }
