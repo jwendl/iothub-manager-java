@@ -4,9 +4,9 @@
 
 # Iot Hub Manager Overview
 
-This services manages most of Azure IoT Hub interactions, such as creating and managing IoT devices, device twins, invoking Methods, and tagging devices. This service is also used to run queries to retrieve devices belonging to a particular group (defined by the user).
+This service manages most of Azure IoT Hub interactions, such as creating and managing IoT devices, device twins, invoking Methods, and tagging devices. This service is also used to run queries to retrieve devices belonging to a particular group (defined by the user).
 
-The microservice provides a RESTful endpoint to manage devices, device twins, commands, methods and all the Azure IoT Hub features required by the [Azure IoT Remote Monitoring](https://github.com/Azure/azure-iot-pcs-remote-monitoring-java) project.
+This microservice provides a RESTful endpoint to manage devices, device twins, commands, methods and all the Azure IoT Hub features required by the [Azure IoT Remote Monitoring](https://github.com/Azure/azure-iot-pcs-remote-monitoring-java) project.
 
 ## Why?
 
