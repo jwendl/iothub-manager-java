@@ -6,12 +6,13 @@ import com.google.inject.ImplementedBy;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.exceptions.BaseException;
 import com.microsoft.azure.iotsolutions.iothubmanager.services.models.DevicePropertyServiceModel;
 
+import java.util.TreeSet;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 @ImplementedBy(DeviceProperties.class)
 public interface IDeviceProperties {
-    CompletionStage<DevicePropertyServiceModel> GetListAsync();
+    CompletionStage<TreeSet<String>> GetListAsync();
 
     CompletionStage<DevicePropertyServiceModel> UpdateListAsync(DevicePropertyServiceModel devicePropertyServiceModel) throws BaseException, ExecutionException, InterruptedException;
 

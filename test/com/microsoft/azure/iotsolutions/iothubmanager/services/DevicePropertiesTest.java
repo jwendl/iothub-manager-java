@@ -49,9 +49,8 @@ public class DevicePropertiesTest {
         Mockito.when(mockStorageAdapterClient.getAsync(Mockito.any(String.class), Mockito.any(String.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> new ValueApiModel("", this.cacheModel, "", metadata)));
         deviceProperties = new DeviceProperties(mockStorageAdapterClient, config, mockDevices);
-        DevicePropertyServiceModel result = this.deviceProperties.GetListAsync().toCompletableFuture().get();
-        assertEquals(String.join(",", new TreeSet<String>(result.getTags())), "a,c,y,z");
-        assertEquals(String.join(",", new TreeSet<String>(result.getReported())), "1,2,3,9");
+        TreeSet<String> result = this.deviceProperties.GetListAsync().toCompletableFuture().get();
+        assertEquals(String.join(",", result), "Tags.z,Tags.y,Tags.c,Tags.a,Properties.Reported.9,Properties.Reported.3,Properties.Reported.2,Properties.Reported.1");
     }
 
     @Test(timeout = 100000)

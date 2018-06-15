@@ -35,6 +35,8 @@ public class DeviceProperties implements IDeviceProperties {
     private static final String WHITELIST_REPORTED_PREFIX = "reported.";
     private static final long SERVICE_QUERY_INTERVAL_SECS = 10;
     private final IDevices devices;
+    private final String TAG_PREFIX = "Tags.";
+    private final String REPORTED_PREFIX = "Properties.Reported.";
 
     @Inject
     public DeviceProperties(IStorageAdapterClient storageClient,
@@ -48,14 +50,23 @@ public class DeviceProperties implements IDeviceProperties {
     }
 
     @Override
-    public CompletionStage<DevicePropertyServiceModel> GetListAsync() {
+    public CompletionStage<TreeSet<String>> GetListAsync() {
         try {
-            return storageClient.getAsync(CacheCollectionId, CacheKey).thenApplyAsync(m ->
-                Json.fromJson(Json.parse(m.getData()), DevicePropertyServiceModel.class)
-            );
+            ValueApiModel valueApiModel = storageClient.getAsync(CacheCollectionId, CacheKey).
+                toCompletableFuture().get();
+            DevicePropertyServiceModel devicePropertyServiceModel = Json.fromJson(Json.parse(valueApiModel.getData()), DevicePropertyServiceModel.class);
+            TreeSet<String> deviceProperties = new TreeSet<String>();
+            for (String tag : devicePropertyServiceModel.getTags()) {
+                deviceProperties.add(TAG_PREFIX + tag);
+            }
+            for (String reported : devicePropertyServiceModel.getReported()) {
+                deviceProperties.add(REPORTED_PREFIX + reported);
+            }
+            TreeSet<String> resultProperties = (TreeSet<String>) deviceProperties.descendingSet();
+            return CompletableFuture.supplyAsync(() -> resultProperties);
         } catch (Exception ex) {
             log.info(String.format("%s:%s not found.", CacheCollectionId, CacheKey), ex);
-            return CompletableFuture.completedFuture(new DevicePropertyServiceModel(new HashSet<>(), new HashSet<>()));
+            return CompletableFuture.supplyAsync(() -> new TreeSet<String>());
         }
     }
 
