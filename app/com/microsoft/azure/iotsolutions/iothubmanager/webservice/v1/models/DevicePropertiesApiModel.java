@@ -13,8 +13,8 @@ public class DevicePropertiesApiModel {
     private Hashtable<String, String> metadata;
 
 
-    private final String tagPrefix = "tags.";
-    private final String reportedPrefix = "properties.reported.";
+    private final String tagPrefix = "Tags.";
+    private final String reportedPrefix = "Properties.Reported.";
 
     @JsonProperty("Items")
     public TreeSet<String> getItems() {
