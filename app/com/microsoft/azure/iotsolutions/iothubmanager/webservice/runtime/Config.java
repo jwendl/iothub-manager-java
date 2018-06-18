@@ -24,9 +24,9 @@ public class Config implements IConfig {
     private final String IOTHUB_CONNSTRING_KEY = APPLICATION_KEY + "iothub.connstring";
     private final String STORAGE_ADAPTER_WEBSERVICE_URL = APPLICATION_KEY + "storageadapter-webservice-url";
     private final String DEVICE_PROPERTIES_KEY = APPLICATION_KEY + "device-properties-cache.";
-    private final String DEVICE_PROPERTIES_TTL = DEVICE_PROPERTIES_KEY + "device_properties_TTL";
-    private final String DEVICE_PROPERTIES_REBUILD_TIMEOUT = DEVICE_PROPERTIES_KEY + "device_properties_rebuild_timeout";
-    private final String DEVICE_PROPERTIES_WHITELIST_KEY = DEVICE_PROPERTIES_KEY + "device_properties_whitelist";
+    private final String DEVICE_PROPERTIES_TTL = DEVICE_PROPERTIES_KEY + "TTL";
+    private final String DEVICE_PROPERTIES_REBUILD_TIMEOUT = DEVICE_PROPERTIES_KEY + "rebuild_timeout";
+    private final String DEVICE_PROPERTIES_WHITELIST_KEY = DEVICE_PROPERTIES_KEY + "whitelist";
 
     private final String CLIENT_AUTH_KEY = APPLICATION_KEY + "client-auth.";
     private final String AUTH_REQUIRED_KEY = CLIENT_AUTH_KEY + "auth_required";
