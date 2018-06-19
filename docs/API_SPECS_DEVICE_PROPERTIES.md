@@ -7,7 +7,7 @@ The list of device properties.
 
 Request:
 ```
-GET /v1/deviceProperties
+GET /v1/deviceproperties
 ```
 
 Response:
@@ -28,7 +28,7 @@ Content-Type: application/json
     ],
     "$metadata": {
         "$type": "DevicePropertyList;1",
-        "$url": "/v1/deviceProperties"
+        "$url": "/v1/deviceproperties"
     }
 }
 ```

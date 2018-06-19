@@ -37,6 +37,6 @@ public class DevicePropertiesApiModel {
         items = model;
         metadata = new Hashtable<String, String>();
         metadata.put("$type", String.format("DevicePropertyList;%s", Version.NUMBER));
-        metadata.put("$url", String.format("/%s/deviceProperties", Version.PATH));
+        metadata.put("$url", String.format("/%s/deviceproperties", Version.PATH));
     }
 }
