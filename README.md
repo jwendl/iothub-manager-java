@@ -1,3 +1,5 @@
+> **DEPRECATED: This repository is no longer maintained. It has been moved to a new location. Please visit our new repository [here](https://github.com/Azure/azure-iot-pcs-remote-monitoring-java). This microservice is present under services sub-module.**
+
 [![Build][build-badge]][build-url]
 [![Issues][issues-badge]][issues-url]
 [![Gitter][gitter-badge]][gitter-url]
